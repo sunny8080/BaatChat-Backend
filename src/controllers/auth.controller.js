@@ -1,5 +1,3 @@
-import jwt from 'jsonwebtoken';
-import Mailgen from 'mailgen';
 import { UserLoginTypes } from '../constant.js';
 import User from '../models/user.model.js';
 import ApiError from '../utils/ApiError.js';
