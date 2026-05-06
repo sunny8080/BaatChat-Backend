@@ -131,6 +131,7 @@ export const verifyEmail = asyncHandler(async (req, res, next) => {
   delete createdUser._id;
   delete createdUser.__v;
 
+  // sending access adn refresh token in response, so client can store if req
   return res
     .status(201)
     .cookie('accessToken', accessToken, cookieOptions)
@@ -144,6 +145,72 @@ export const verifyEmail = asyncHandler(async (req, res, next) => {
           refreshToken,
         },
         'User signed up successfully',
+      ),
+    );
+});
+
+/**
+ * Authenticates a user with email or username and password.
+ *
+ * Sets signed access and refresh tokens as HTTP-only cookies and returns the
+ * sanitized user payload with both tokens in the response body.
+ *
+ * @route POST /api/v1/auth/login
+ * @param {import('express').Request} req - Express request containing `email` or `username`, and `password` in the body.
+ * @param {import('express').Response} res - Express response used to set auth cookies and send the login payload.
+ * @param {import('express').NextFunction} next - Express next middleware callback.
+ * @returns {Promise<import('express').Response>} Login response with user data, access token, and refresh token.
+ * @throws {ApiError} If credentials are missing, invalid, or the user registered with a different login method.
+ */
+export const loginUser = asyncHandler(async (req, res, next) => {
+  let { email, username, password } = req.body;
+  email = email?.trim()?.toLowerCase();
+  username = username?.trim()?.toLowerCase();
+
+  if (!(email || username)) {
+    throw new ApiError(400, 'Username or email is required!');
+  }
+
+  if (!password) {
+    throw new ApiError(400, 'Password is required!');
+  }
+
+  const loginCred = email ? { email } : { username };
+  const user = await User.findOne(loginCred).select('+password');
+
+  if (!user) {
+    throw new ApiError(401, 'Invalid email or password!');
+  }
+
+  // check if user has used another method for signed up
+  if (user.loginType !== UserLoginTypes.EMAIL_PASSWORD) {
+    throw new ApiError(400, `You have registered using ${user.loginType?.toLowerCase()}. Please use the ${user.loginType?.toLowerCase()} login option to access your account.`);
+  }
+
+  if (!(await user.isPasswordCorrect(password))) {
+    throw new ApiError(401, 'Invalid email or password!');
+  }
+
+  const { accessToken, refreshToken, cookieOptions } = await generateAccessAndRefreshTokens(user._id);
+
+  let createdUser = await User.findById(user._id).lean();
+  createdUser.id = createdUser._id;
+  delete createdUser._id;
+  delete createdUser.__v;
+
+  return res
+    .status(201)
+    .cookie('accessToken', accessToken, cookieOptions)
+    .cookie('refreshToken', refreshToken, cookieOptions)
+    .json(
+      new ApiResponse(
+        201,
+        {
+          user: createdUser,
+          accessToken,
+          refreshToken,
+        },
+        'User logged up successfully',
       ),
     );
 });
