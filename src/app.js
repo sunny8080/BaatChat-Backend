@@ -39,6 +39,9 @@ app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Mount routers
+import authRouter from './routes/auth.routes.js';
+
+app.use('/api/v1/auth', authRouter);
 
 app.get('/', (req, res) => {
   res.send('Hello from BaatChat backend');

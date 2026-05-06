@@ -34,7 +34,9 @@ const errorMiddleware = (err, req, res, next) => {
 
   // log error msg and send error response
   logger.error(apiError.message);
-  return res.status(apiError.statusCode).json(new ApiResponse(...apiError));
+  return res
+    .status(apiError.statusCode)
+    .json(new ApiResponse(apiError.statusCode, apiError.data, apiError.message, apiError.success, apiError.errors, apiError.stack));
 }
 
 export default errorMiddleware;
