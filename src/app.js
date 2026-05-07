@@ -40,8 +40,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Mount routers
 import authRouter from './routes/auth.routes.js';
+import userRouter from './routes/user.routes.js';
 
 app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/users', userRouter);
 
 app.get('/', (req, res) => {
   res.send('Hello from BaatChat backend');

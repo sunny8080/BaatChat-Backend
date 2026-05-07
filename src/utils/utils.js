@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import './ApiError.js';
 import User from '../models/user.model.js';
+import mongoose from 'mongoose';
 
 /**
  * Generates a six-digit OTP and a deterministic SHA-256 hash tied to the email
@@ -108,4 +109,18 @@ export const generateAccessAndRefreshTokens = async (userId) => {
   await user.save({ validateBeforeSave: false });
 
   return { accessToken, refreshToken, cookieOptions };
+};
+
+/**
+ * Normalizes a user document or plain object for API responses.
+ *
+ * @param {mongoose.Document|object} user - User document or plain user object to sanitize.
+ * @returns {object} User object with `id` mapped from `_id` and internal fields removed.
+ */
+export const sanitizeUser = (user) => {
+  const userObj = user instanceof mongoose.Document ? user.toObject() : user;
+  userObj.id = userObj._id;
+  delete userObj._id;
+  delete userObj.__v;
+  return userObj;
 };

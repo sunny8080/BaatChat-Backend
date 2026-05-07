@@ -5,7 +5,7 @@ import ApiError from '../utils/ApiError.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import OTPMail from '../mails/OTPMail.js';
-import { mailSender, generateOTP, hashOTP, generateAccessAndRefreshTokens, generateTempToken, hashTempToken } from '../utils/utils.js';
+import { mailSender, generateOTP, hashOTP, generateAccessAndRefreshTokens, generateTempToken, hashTempToken, sanitizeUser } from '../utils/utils.js';
 import ForgotPasswordMail from '../mails/ForgotPasswordMail.js';
 
 /**
@@ -128,10 +128,7 @@ export const verifyEmail = asyncHandler(async (req, res, next) => {
   // generate access token and refresh token and send it in http cookie as httpOnly
   const { accessToken, refreshToken, cookieOptions } = await generateAccessAndRefreshTokens(user._id);
 
-  let createdUser = await User.findById(user._id).lean();
-  createdUser.id = createdUser._id;
-  delete createdUser._id;
-  delete createdUser.__v;
+  let createdUser = await User.findById(user._id);
 
   // sending access adn refresh token in response, so client can store if req
   return res
@@ -142,7 +139,7 @@ export const verifyEmail = asyncHandler(async (req, res, next) => {
       new ApiResponse(
         201,
         {
-          user: createdUser,
+          user: sanitizeUser(createdUser),
           accessToken,
           refreshToken,
         },
@@ -195,10 +192,7 @@ export const loginUser = asyncHandler(async (req, res, next) => {
 
   const { accessToken, refreshToken, cookieOptions } = await generateAccessAndRefreshTokens(user._id);
 
-  let createdUser = await User.findById(user._id).lean();
-  createdUser.id = createdUser._id;
-  delete createdUser._id;
-  delete createdUser.__v;
+  let createdUser = await User.findById(user._id);
 
   return res
     .status(201)
@@ -208,7 +202,7 @@ export const loginUser = asyncHandler(async (req, res, next) => {
       new ApiResponse(
         201,
         {
-          user: createdUser,
+          user: sanitizeUser(createdUser),
           accessToken,
           refreshToken,
         },
@@ -467,10 +461,13 @@ export const changePassword = asyncHandler(async (req, res) => {
  * @returns {Promise<void>} Sends the current user with MongoDB metadata normalized out.
  */
 export const getCurrentUser = asyncHandler(async (req, res) => {
-  let curUser = req.user.toObject();
-  curUser.id = curUser._id;
-  delete curUser._id;
-  delete curUser.__v;
-
-  return res.status(200).json(new ApiResponse(200, { user: curUser }, 'Current user fetched successfully'));
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        user: sanitizeUser(req.user),
+      },
+      'Current user fetched successfully',
+    ),
+  );
 });
