@@ -457,3 +457,20 @@ export const changePassword = asyncHandler(async (req, res) => {
     .clearCookie('refreshToken', cookieOptions)
     .json(new ApiResponse(200, {}, 'Password changed successfully'));
 });
+
+/**
+ * Fetch the authenticated user's profile from the current request.
+ *
+ * @route GET /api/v1/auth/me
+ * @param {import("express").Request} req - Express request with the authenticated user attached by auth middleware.
+ * @param {import("express").Response} res - Express response.
+ * @returns {Promise<void>} Sends the current user with MongoDB metadata normalized out.
+ */
+export const getCurrentUser = asyncHandler(async (req, res) => {
+  let curUser = req.user.toObject();
+  curUser.id = curUser._id;
+  delete curUser._id;
+  delete curUser.__v;
+
+  return res.status(200).json(new ApiResponse(200, { user: curUser }, 'Current user fetched successfully'));
+});
