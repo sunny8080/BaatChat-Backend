@@ -28,6 +28,25 @@ export const hashOTP = (email, otp) => {
 };
 
 /**
+ * Generates a cryptographically secure temporary token for one-time flows.
+ *
+ * @returns {string} Hex-encoded random token.
+ */
+export const generateTempToken = function () {
+  return crypto.randomBytes(20).toString('hex');
+};
+
+/**
+ * Creates a deterministic SHA-256 hash of a temporary token for persistence.
+ *
+ * @param {string} token - Temporary token to hash.
+ * @returns {string} Hex-encoded SHA-256 hash.
+ */
+export const hashTempToken = function (token) {
+  return crypto.createHash('sha256').update(token).digest('hex');
+};
+
+/**
  * Sends an email through the configured SMTP transport.
  *
  * @param {string} toEmail - Recipient email address.
