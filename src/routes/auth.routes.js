@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { changePassword, forgotPassword, getCurrentUser, loginUser, logoutUser, refreshAccessToken, registerUser, resendEmailVerificationOTP, resetPassword, verifyEmail } from '../controllers/auth.controller.js';
+import { changePassword, forgotPassword, getCurrentUser, loginUser, logoutUser, getAccessToken, registerUser, resendVerificationOTP, resetPassword, verifyEmail } from '../controllers/auth.controller.js';
 import { authenticateUser } from '../middlewares/auth.middleware.js';
 
 const router = Router();
@@ -7,9 +7,9 @@ const router = Router();
 router.route('/register-user').post(registerUser);
 router.route('/verify-email').post(verifyEmail);
 router.route('/login').post(loginUser);
-router.route('/logout').post(authenticateUser, logoutUser);
-router.route('/refresh-token').post(refreshAccessToken);
-router.route('/resend-email-verification-otp').post(resendEmailVerificationOTP);
+router.route('/logout').get(authenticateUser, logoutUser);
+router.route('/get-access-token').get(getAccessToken);
+router.route('/resend-verification-otp').post(resendVerificationOTP);
 
 router.route('/forgot-password').post(forgotPassword);
 router.route('/reset-password').post(resetPassword);

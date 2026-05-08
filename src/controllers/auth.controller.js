@@ -215,7 +215,7 @@ export const loginUser = asyncHandler(async (req, res, next) => {
  * Logs out the authenticated user by clearing their stored refresh token,
  * removing auth cookies, and returning a success response.
  *
- * @route POST /api/v1/auth/logout
+ * @route GET /api/v1/auth/logout
  * @access Private
  */
 export const logoutUser = asyncHandler(async (req, res, next) => {
@@ -239,14 +239,14 @@ export const logoutUser = asyncHandler(async (req, res, next) => {
 });
 
 /**
- * Refresh the current user's access token using a valid refresh token.
+ * Get the current user's access token using a valid refresh token.
  *
- * @route POST /api/v1/auth/refresh-token
+ * @route GET /api/v1/auth/refresh-access-token
  * @param {import("express").Request} req - Express request with refresh token in cookies or body.
  * @param {import("express").Response} res - Express response.
  * @returns {Promise<void>} Sends newly generated access and refresh tokens.
  */
-export const refreshAccessToken = asyncHandler(async (req, res) => {
+export const getAccessToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
 
   if (!incomingRefreshToken) {
@@ -286,12 +286,12 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
 /**
  * Resend the signup email verification OTP to an unverified user.
  *
- * @route POST /api/v1/auth/resend-email-verification-otp
+ * @route POST /api/v1/auth/resend-verification-otp
  * @param {import("express").Request} req - Express request with email in the body.
  * @param {import("express").Response} res - Express response.
  * @returns {Promise<void>} Sends the normalized email and OTP delivery status.
  */
-export const resendEmailVerificationOTP = asyncHandler(async (req, res) => {
+export const resendVerificationOTP = asyncHandler(async (req, res) => {
   let { email } = req.body;
   email = email?.trim().toLowerCase();
 
@@ -363,6 +363,7 @@ export const forgotPassword = asyncHandler(async (req, res) => {
 /**
  * Reset a user's password using a valid password reset token.
  *
+ * @route POST /api/v1/auth/reset-password
  * @param {import("express").Request} req - Express request with the reset token in params or body and the new password details in the body.
  * @param {import("express").Response} res - Express response.
  * @returns {Promise<void>} Sends the password reset status.
