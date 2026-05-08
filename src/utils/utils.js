@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
-import './ApiError.js';
+import ApiError from './ApiError.js';
 import User from '../models/user.model.js';
 import mongoose from 'mongoose';
 

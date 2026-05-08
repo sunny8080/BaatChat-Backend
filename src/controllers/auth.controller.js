@@ -360,6 +360,7 @@ export const forgotPassword = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, {}, 'Password reset link sent successfully on your email.'));
 });
 
+// TODO -need to validate this controller
 /**
  * Reset a user's password using a valid password reset token.
  *
