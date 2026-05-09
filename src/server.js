@@ -25,7 +25,7 @@ const startServer = async () => {
 
 const shutdown = () => {
   logger.info('Shutting down BaatChat backend');
-  server.close(() => process.exit(0));
+  httpServer.close(() => process.exit(0));
 };
 
 process.on('SIGINT', shutdown);

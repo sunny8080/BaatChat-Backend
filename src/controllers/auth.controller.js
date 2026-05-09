@@ -350,7 +350,7 @@ export const forgotPassword = asyncHandler(async (req, res) => {
   const resetURL = `${process.env.FED_URL}/reset-password/${resetToken}`;
 
   user.forgotPasswordToken = hashedResetToken;
-  user.forgotPasswordExpiry = new Date(Date.now() + process.env.USER_TEMPORARY_TOKEN_EXPIRY);
+  user.forgotPasswordExpiry = new Date(Date.now() + parseInt(process.env.USER_TEMPORARY_TOKEN_EXPIRY));
   await user.save({ validateBeforeSave: false });
 
   // send reset link email
