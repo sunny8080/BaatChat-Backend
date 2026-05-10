@@ -473,3 +473,32 @@ export const getCurrentUser = asyncHandler(async (req, res) => {
     ),
   );
 });
+
+/**
+ * Check whether a username is available for registration.
+ *
+ * @route GET /api/v1/auth/check-username
+ * @param {import("express").Request} req - Express request with username in the query string.
+ * @param {import("express").Response} res - Express response.
+ * @returns {Promise<void>} Sends the normalized username and availability status.
+ */
+export const checkUsernameAvailability = asyncHandler(async (req, res) => {
+  const username = req.query.username?.trim()?.toLowerCase();
+
+  if (!username) {
+    throw new ApiError(400, 'Username is required');
+  }
+
+  const usernameExists = await User.exists({ username });
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        username,
+        isAvailable: !usernameExists,
+      },
+      usernameExists ? 'Username is not available' : 'Username is available',
+    ),
+  );
+});
