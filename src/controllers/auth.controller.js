@@ -30,6 +30,10 @@ export const registerUser = asyncHandler(async (req, res, next) => {
     throw new ApiError(400, 'Some data are missing!');
   }
 
+  if (password.length < 6) {
+    throw new ApiError(400, 'Password must have at least 6 chars');
+  }
+
   // check if username already exist and not having same email
   const userNameExist = await User.findOne({
     username,
@@ -132,12 +136,12 @@ export const verifyEmail = asyncHandler(async (req, res, next) => {
 
   // sending access adn refresh token in response, so client can store if req
   return res
-    .status(201)
+    .status(200)
     .cookie('accessToken', accessToken, cookieOptions)
     .cookie('refreshToken', refreshToken, cookieOptions)
     .json(
       new ApiResponse(
-        201,
+        200,
         {
           user: sanitizeUser(createdUser),
           accessToken,
@@ -162,11 +166,10 @@ export const verifyEmail = asyncHandler(async (req, res, next) => {
  * @throws {ApiError} If credentials are missing, invalid, or the user registered with a different login method.
  */
 export const loginUser = asyncHandler(async (req, res, next) => {
-  let { email, username, password } = req.body;
-  email = email?.trim()?.toLowerCase();
-  username = username?.trim()?.toLowerCase();
+  let { emailOrUsername, password } = req.body;
+  emailOrUsername = emailOrUsername?.trim()?.toLowerCase();
 
-  if (!(email || username)) {
+  if (!emailOrUsername) {
     throw new ApiError(400, 'Username or email is required!');
   }
 
@@ -174,8 +177,8 @@ export const loginUser = asyncHandler(async (req, res, next) => {
     throw new ApiError(400, 'Password is required!');
   }
 
-  const loginCred = email ? { email } : { username };
-  const user = await User.findOne(loginCred).select('+password');
+  const loginCred = emailOrUsername.includes('@') ? { email: emailOrUsername } : { username: emailOrUsername };
+  let user = await User.findOne(loginCred).select('+password');
 
   if (!user) {
     throw new ApiError(401, 'Invalid email or password!');
@@ -192,17 +195,17 @@ export const loginUser = asyncHandler(async (req, res, next) => {
 
   const { accessToken, refreshToken, cookieOptions } = await generateAccessAndRefreshTokens(user._id);
 
-  let createdUser = await User.findById(user._id);
+  user = await User.findById(user._id);
 
   return res
-    .status(201)
+    .status(200)
     .cookie('accessToken', accessToken, cookieOptions)
     .cookie('refreshToken', refreshToken, cookieOptions)
     .json(
       new ApiResponse(
-        201,
+        200,
         {
-          user: sanitizeUser(createdUser),
+          user: sanitizeUser(user),
           accessToken,
           refreshToken,
         },
@@ -313,7 +316,7 @@ export const resendVerificationOTP = asyncHandler(async (req, res) => {
   user.emailVerificationOTPExpiry = new Date(Date.now() + parseInt(process.env.OTP_EXPIRY_MS));
   await user.save();
 
-  return res.status(201).json(new ApiResponse(201, { email }, 'Signup OTP sent successfully on your email.'));
+  return res.status(200).json(new ApiResponse(200, { email }, 'Signup OTP sent successfully on your email.'));
 });
 
 /**
