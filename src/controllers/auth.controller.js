@@ -350,7 +350,7 @@ export const forgotPassword = asyncHandler(async (req, res) => {
 
   const resetToken = generateTempToken();
   const hashedResetToken = hashTempToken(resetToken);
-  const resetURL = `${process.env.FED_URL}/reset-password/${resetToken}`;
+  const resetURL = `${process.env.FED_URL}/reset-password/${resetToken}?te=${Date.now() + parseInt(process.env.USER_TEMPORARY_TOKEN_EXPIRY)}`; // te is token creation time, used by FED
 
   user.forgotPasswordToken = hashedResetToken;
   user.forgotPasswordExpiry = new Date(Date.now() + parseInt(process.env.USER_TEMPORARY_TOKEN_EXPIRY));
