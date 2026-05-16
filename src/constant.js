@@ -9,5 +9,4 @@ export const UserLoginTypes = {
   GITHUB: 'GITHUB',
   FACEBOOK: 'FACEBOOK',
   EMAIL_PASSWORD: 'EMAIL_PASSWORD',
-  OTP: 'OTP'
 } 
