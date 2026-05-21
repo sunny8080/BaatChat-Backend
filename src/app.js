@@ -8,6 +8,7 @@ import errorMiddleware from './middlewares/error.middleware.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import notFoundMiddleware from './middlewares/notFound.middleware.js';
+import { initializeSocketIO } from './socket/socket.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,6 +24,7 @@ const io = new Server(httpServer, {
 
 // Mount io instance on global, so we can directly use it anywhere
 app.set('io', io);
+initializeSocketIO(io);
 
 // Global Middlewares
 app.use(

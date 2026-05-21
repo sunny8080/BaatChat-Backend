@@ -124,3 +124,19 @@ export const sanitizeUser = (user) => {
   delete userObj.__v;
   return userObj;
 };
+
+/**
+ * Retrieves a cookie value by name from a Cookie header string.
+ *
+ * @param {string} cookies - Raw Cookie header string containing semicolon-delimited cookies.
+ * @param {string} [cookieName=''] - Name of the cookie to retrieve.
+ * @returns {string|null} Cookie value when found, otherwise `null`.
+ */
+export const getCookie = (cookies, cookieName = '') => {
+  const cookiesObj = cookies.split(';');
+  for (let cookie of cookiesObj) {
+    const [key, val] = cookie.trim().split('=');
+    if (key === cookieName) return val;
+  }
+  return null;
+};

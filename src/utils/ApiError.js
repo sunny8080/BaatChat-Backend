@@ -6,7 +6,6 @@ import errorMiddleware from '../middlewares/error.middleware.js';
  * @extends Error
  */
 class ApiError extends Error {
-
   /**
    * Creates a structured API error.
    *
@@ -15,10 +14,10 @@ class ApiError extends Error {
    * @param {Array<unknown>} [errors=[]] - Additional validation or processing errors.
    * @param {string} [stack=""] - Optional stack trace override.
    */
-  constructor(statusCode, message = "Something went wrong, try later!", errors = [], stack = "") {
+  constructor(statusCode, message = 'Something went wrong, try later!', data = null, errors = [], stack = '') {
     super(message);
     this.statusCode = statusCode;
-    this.data = null;
+    this.data = data;
     this.message = message;
     this.success = false;
     this.errors = errors;
