@@ -10,8 +10,8 @@ import { fileURLToPath } from 'url';
 import notFoundMiddleware from './middlewares/notFound.middleware.js';
 import { initializeSocketIO } from './socket/socket.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+export const __filename = fileURLToPath(import.meta.url);
+export const __dirname = path.dirname(__filename);
 
 const app = express();
 const httpServer = createServer(app);
@@ -42,9 +42,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Mount routers
 import authRouter from './routes/auth.routes.js';
 import userRouter from './routes/user.routes.js';
+import { generateUsers } from './seeds/user.seeds.js';
 
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/users', userRouter);
+
+// Mount Seeds Routes
+app.get('/api/v1/seeds/users', generateUsers);
 
 app.get('/', (req, res) => {
   res.send('Hello from BaatChat backend');

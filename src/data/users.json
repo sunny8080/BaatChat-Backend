@@ -1,0 +1,182 @@
+[
+  {
+    "email": "aarav.sharma@example.com",
+    "name": "Aarav Sharma",
+    "username": "aaravsharma",
+    "password": "Password123!",
+    "bio": "Frontend engineer who loves clean chat experiences.",
+    "avatarUrl": "https://api.dicebear.com/8.x/initials/svg?seed=Aarav%20Sharma",
+    "isEmailVerified": true
+  },
+  {
+    "email": "ananya.iyer@example.com",
+    "name": "Ananya Iyer",
+    "username": "ananyaiyer",
+    "password": "Password123!",
+    "bio": "Product designer exploring realtime collaboration.",
+    "avatarUrl": "https://api.dicebear.com/8.x/initials/svg?seed=Ananya%20Iyer",
+    "isEmailVerified": true
+  },
+  {
+    "email": "vivaan.patel@example.com",
+    "name": "Vivaan Patel",
+    "username": "vivaanpatel",
+    "password": "Password123!",
+    "bio": "Backend developer and database tinkerer.",
+    "avatarUrl": "https://api.dicebear.com/8.x/initials/svg?seed=Vivaan%20Patel",
+    "isEmailVerified": true
+  },
+  {
+    "email": "diya.menon@example.com",
+    "name": "Diya Menon",
+    "username": "diyamenon",
+    "password": "Password123!",
+    "bio": "QA specialist with a soft spot for edge cases.",
+    "avatarUrl": "https://api.dicebear.com/8.x/initials/svg?seed=Diya%20Menon",
+    "isEmailVerified": true
+  },
+  {
+    "email": "kabir.khan@example.com",
+    "name": "Kabir Khan",
+    "username": "kabirkhan",
+    "password": "Password123!",
+    "bio": "Full-stack developer building reliable systems.",
+    "avatarUrl": "https://api.dicebear.com/8.x/initials/svg?seed=Kabir%20Khan",
+    "isEmailVerified": true
+  },
+  {
+    "email": "isha.singh@example.com",
+    "name": "Isha Singh",
+    "username": "ishasingh",
+    "password": "Password123!",
+    "bio": "Community manager and thoughtful conversation starter.",
+    "avatarUrl": "https://api.dicebear.com/8.x/initials/svg?seed=Isha%20Singh",
+    "isEmailVerified": true
+  },
+  {
+    "email": "reyan.gupta@example.com",
+    "name": "Reyan Gupta",
+    "username": "reyangupta",
+    "password": "Password123!",
+    "bio": "Mobile engineer focused on smooth messaging flows.",
+    "avatarUrl": "https://api.dicebear.com/8.x/initials/svg?seed=Reyan%20Gupta",
+    "isEmailVerified": true
+  },
+  {
+    "email": "meera.nair@example.com",
+    "name": "Meera Nair",
+    "username": "meeranair",
+    "password": "Password123!",
+    "bio": "Data analyst who enjoys sharp product insights.",
+    "avatarUrl": "https://api.dicebear.com/8.x/initials/svg?seed=Meera%20Nair",
+    "isEmailVerified": true
+  },
+  {
+    "email": "arjun.reddy@example.com",
+    "name": "Arjun Reddy",
+    "username": "arjunreddy",
+    "password": "Password123!",
+    "bio": "DevOps engineer keeping deployments calm.",
+    "avatarUrl": "https://api.dicebear.com/8.x/initials/svg?seed=Arjun%20Reddy",
+    "isEmailVerified": true
+  },
+  {
+    "email": "saanvi.rao@example.com",
+    "name": "Saanvi Rao",
+    "username": "saanvirao",
+    "password": "Password123!",
+    "bio": "UX researcher listening closely to users.",
+    "avatarUrl": "https://api.dicebear.com/8.x/initials/svg?seed=Saanvi%20Rao",
+    "isEmailVerified": true
+  },
+  {
+    "email": "advait.joshi@example.com",
+    "name": "Advait Joshi",
+    "username": "advaitjoshi",
+    "password": "Password123!",
+    "bio": "Security-minded engineer and code reviewer.",
+    "avatarUrl": "https://api.dicebear.com/8.x/initials/svg?seed=Advait%20Joshi",
+    "isEmailVerified": true
+  },
+  {
+    "email": "tara.desai@example.com",
+    "name": "Tara Desai",
+    "username": "taradesai",
+    "password": "Password123!",
+    "bio": "Content strategist shaping clearer product stories.",
+    "avatarUrl": "https://api.dicebear.com/8.x/initials/svg?seed=Tara%20Desai",
+    "isEmailVerified": true
+  },
+  {
+    "email": "krish.verma@example.com",
+    "name": "Krish Verma",
+    "username": "krishverma",
+    "password": "Password123!",
+    "bio": "Realtime systems enthusiast and socket debugger.",
+    "avatarUrl": "https://api.dicebear.com/8.x/initials/svg?seed=Krish%20Verma",
+    "isEmailVerified": true
+  },
+  {
+    "email": "naina.mehta@example.com",
+    "name": "Naina Mehta",
+    "username": "nainamehta",
+    "password": "Password123!",
+    "bio": "Marketing lead who enjoys crisp launch plans.",
+    "avatarUrl": "https://api.dicebear.com/8.x/initials/svg?seed=Naina%20Mehta",
+    "isEmailVerified": true
+  },
+  {
+    "email": "dhruv.bose@example.com",
+    "name": "Dhruv Bose",
+    "username": "dhruvbose",
+    "password": "Password123!",
+    "bio": "API engineer with a love for simple contracts.",
+    "avatarUrl": "https://api.dicebear.com/8.x/initials/svg?seed=Dhruv%20Bose",
+    "isEmailVerified": true
+  },
+  {
+    "email": "kiara.sen@example.com",
+    "name": "Kiara Sen",
+    "username": "kiarasen",
+    "password": "Password123!",
+    "bio": "Support specialist helping teams move faster.",
+    "avatarUrl": "https://api.dicebear.com/8.x/initials/svg?seed=Kiara%20Sen",
+    "isEmailVerified": true
+  },
+  {
+    "email": "rishi.malhotra@example.com",
+    "name": "Rishi Malhotra",
+    "username": "rishimalhotra",
+    "password": "Password123!",
+    "bio": "Cloud architect who likes tidy infrastructure.",
+    "avatarUrl": "https://api.dicebear.com/8.x/initials/svg?seed=Rishi%20Malhotra",
+    "isEmailVerified": true
+  },
+  {
+    "email": "zoya.mirza@example.com",
+    "name": "Zoya Mirza",
+    "username": "zoyamirza",
+    "password": "Password123!",
+    "bio": "Brand designer with an eye for polished UI.",
+    "avatarUrl": "https://api.dicebear.com/8.x/initials/svg?seed=Zoya%20Mirza",
+    "isEmailVerified": true
+  },
+  {
+    "email": "omprakash.das@example.com",
+    "name": "Omprakash Das",
+    "username": "omprakashdas",
+    "password": "Password123!",
+    "bio": "Systems programmer keeping performance honest.",
+    "avatarUrl": "https://api.dicebear.com/8.x/initials/svg?seed=Omprakash%20Das",
+    "isEmailVerified": true
+  },
+  {
+    "email": "priya.chopra@example.com",
+    "name": "Priya Chopra",
+    "username": "priyachopra",
+    "password": "Password123!",
+    "bio": "Project manager turning chatty plans into shipped work.",
+    "avatarUrl": "https://api.dicebear.com/8.x/initials/svg?seed=Priya%20Chopra",
+    "isEmailVerified": true
+  }
+]
