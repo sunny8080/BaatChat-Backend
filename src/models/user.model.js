@@ -1,16 +1,15 @@
-import bcrypt from "bcrypt";
-import crypto from "crypto";
-import jwt from "jsonwebtoken";
-import mongoose, { Schema } from "mongoose";
+import bcrypt from 'bcrypt';
+import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
+import mongoose, { Schema } from 'mongoose';
 import { UserLoginTypes } from '../constant.js';
-
 
 const userSchema = new Schema(
   {
     email: {
       type: String,
       required: true,
-      unique: [true, 'Email already exist!'],
+      unique: true,
       lowercase: true,
       trim: true,
       index: true,
@@ -28,7 +27,9 @@ const userSchema = new Schema(
       lowercase: true,
       trim: true,
       index: true,
-      unique: [true, 'Username already exist!'],
+      unique: true,
+      minlength: 3,
+      maxlength: 30,
     },
     avatarUrl: {
       type: String,
@@ -40,7 +41,6 @@ const userSchema = new Schema(
       required() {
         return this.loginType === UserLoginTypes.EMAIL_PASSWORD;
       },
-      trim: true,
       minlength: 8,
       select: false,
     },
@@ -82,20 +82,27 @@ const userSchema = new Schema(
       type: Date,
       default: Date.now,
     },
+    blockedUsers: [
+      // TODO - future scope, for now won't be user for now
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
   },
   { timestamps: true },
 );
 
 // User middlewares to update password
-userSchema.pre("save", async function () {
-  if (!this.isModified("password") || !this.password) {
+userSchema.pre('save', async function () {
+  if (!this.isModified('password') || !this.password) {
     return;
   }
 
   this.password = await bcrypt.hash(this.password, 10);
 });
 
-userSchema.pre("findOneAndUpdate", async function () {
+userSchema.pre('findOneAndUpdate', async function () {
   const update = this.getUpdate();
   const password = update?.$set?.password ?? update?.password;
 
@@ -105,13 +112,12 @@ userSchema.pre("findOneAndUpdate", async function () {
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  if (update.$set?.password) { update.$set.password = hashedPassword;
+  if (update.$set?.password) {
+    update.$set.password = hashedPassword;
   } else {
     update.password = hashedPassword;
   }
 });
-
-
 
 // User methods
 
@@ -136,11 +142,11 @@ userSchema.methods.generateAccessToken = function () {
       _id: this._id,
       email: this.email,
       name: this.name,
-      username: this.username
+      username: this.username,
     },
     process.env.ACCESS_TOKEN_SECRET,
     {
-      expiresIn: process.env.ACCESS_TOKEN_EXPIRY || "15m",
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRY || '15m',
     },
   );
 };
@@ -157,7 +163,7 @@ userSchema.methods.generateRefreshToken = function () {
     },
     process.env.REFRESH_TOKEN_SECRET,
     {
-      expiresIn: process.env.REFRESH_TOKEN_EXPIRY || "7d",
+      expiresIn: process.env.REFRESH_TOKEN_EXPIRY || '7d',
     },
   );
 };
@@ -169,20 +175,18 @@ userSchema.methods.generateRefreshToken = function () {
  */
 userSchema.methods.generateTemporaryToken = function () {
   // we'll send unHashedToken to client and store hashedToken in DB, which can be later used for verification
-  const unHashedToken = crypto.randomBytes(20).toString("hex");
-  const hashedToken = crypto
-    .createHash("sha256")
-    .update(unHashedToken)
-    .digest("hex");
+  const unHashedToken = crypto.randomBytes(20).toString('hex');
+  const hashedToken = crypto.createHash('sha256').update(unHashedToken).digest('hex');
   const tokenExpiry = Date.now() + process.env.USER_TEMPORARY_TOKEN_EXPIRY;
 
   return { unHashedToken, hashedToken, tokenExpiry };
 };
 
 /**
- * Mongoose model for users.
+ * User document model.
  *
- * @type {mongoose.Model}
+ * @typedef {import('mongoose').InferSchemaType<typeof userSchema>} userDocument
+ * @type {mongoose.Model<userDocument>}
  */
-const User = mongoose.model("User", userSchema);
+const User = mongoose.model('User', userSchema);
 export default User;
