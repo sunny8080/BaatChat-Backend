@@ -453,3 +453,56 @@ export const fetchSentFriendRequest = asyncHandler(async (req, res) => {
     ),
   );
 });
+
+/**
+ * Cancel a pending friend request sent by the authenticated user.
+ *
+ * @route PATCH /api/v1/users/cancel-friend-request
+ * @access Private
+ * @param {import('express').Request & { user: { _id: import('mongoose').Types.ObjectId } }} req
+ * @param {import('express').Response} res
+ * @returns {Promise<void>} Sends the cancelled friendship in an ApiResponse.
+ * @throws {ApiError} When username is missing, the receiver is not found, or no pending request exists.
+ */
+export const cancelFriendRequest = asyncHandler(async (req, res) => {
+  const username = req.body?.username?.trim()?.toLowerCase();
+
+  if (!username) {
+    throw new ApiError(400, 'Username is required');
+  }
+
+  const receiver = await User.findOne({ username, isEmailVerified: true }).select('_id').lean();
+
+  if (!receiver) {
+    throw new ApiError(404, 'User not found');
+  }
+
+  const friendship = await Friendship.findOneAndUpdate(
+    {
+      sender: req.user._id,
+      receiver: receiver._id,
+      status: friendshipStatus.PENDING,
+    },
+    {
+      $set: {
+        status: friendshipStatus.REJECTED,
+        respondedAt: new Date(),
+      },
+    },
+    { returnDocument: 'after' },
+  );
+
+  if (!friendship) {
+    throw new ApiError(404, 'Friend request not found');
+  }
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        friendship,
+      },
+      'Friend request cancelled successfully',
+    ),
+  );
+});
