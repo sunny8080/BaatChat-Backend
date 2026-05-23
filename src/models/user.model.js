@@ -15,6 +15,15 @@ const userSchema = new Schema(
       index: true,
       match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Enter valid email!'],
     },
+    phone: {
+      type: String,
+      trim: true,
+      minLength: [10, 'Phone number must have at least 10 digits'],
+      maxLength: [10, 'Phone number must have at most 10 digits'],
+      match: [/^.*\d.*\d.*\d.*\d.*\d.*\d.*\d.*\d.*\d.*\d.*$/, 'Phone number must have at least 10 digits.'],
+      required: true,
+      index: true,
+    },
     name: {
       type: String,
       required: true,
@@ -116,6 +125,12 @@ userSchema.pre('findOneAndUpdate', async function () {
     update.$set.password = hashedPassword;
   } else {
     update.password = hashedPassword;
+  }
+});
+
+userSchema.pre('save', async function () {
+  if (!this.avatarUrl) {
+    this.avatarUrl = `https://api.dicebear.com/9.x/initials/svg?seed=${this.name}`;
   }
 });
 

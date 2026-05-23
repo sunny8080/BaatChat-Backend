@@ -62,3 +62,17 @@ export const callStatus = {
   ENDED: 'ended',
   FAILED: 'failed',
 };
+
+/**
+ * Supported statuses for friendship requests and relationships.
+ *
+ * @readonly
+ * @enum {string}
+ */
+export const friendshipStatus = Object.freeze({
+  PENDING: 'pending', // user A sends req to B, so it's pending with B
+  REQUESTED: 'requested', // user B will get requested
+  ACCEPTED: 'accepted', // if B accept req, then they will be friends and status will be accepted
+  REJECTED: 'rejected',
+  BLOCKED: 'blocked',
+});

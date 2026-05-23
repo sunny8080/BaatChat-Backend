@@ -1,6 +1,7 @@
 [
   {
     "email": "aarav.sharma@example.com",
+    "phone": "9876543201",
     "name": "Aarav Sharma",
     "username": "aaravsharma",
     "password": "Password123!",
@@ -9,7 +10,38 @@
     "isEmailVerified": true
   },
   {
+    "email": "aarav.sharma2@example.com",
+    "phone": "9876543202",
+    "name": "Aarav Sharma2",
+    "username": "aaravsharma2",
+    "password": "Password123!",
+    "bio": "Frontend engineer who loves clean chat experiences.",
+    "avatarUrl": "https://api.dicebear.com/8.x/initials/svg?seed=Aarav%20Sharma",
+    "isEmailVerified": true
+  },
+  {
+    "email": "aarav.sharma3@example.com",
+    "phone": "9876543203",
+    "name": "Aarav Sharma3",
+    "username": "aaravsharma3",
+    "password": "Password123!",
+    "bio": "Frontend engineer who loves clean chat experiences.",
+    "avatarUrl": "https://api.dicebear.com/8.x/initials/svg?seed=Aarav%20Sharma",
+    "isEmailVerified": true
+  },
+  {
+    "email": "aarav.sharma4@example.com",
+    "phone": "9876543204",
+    "name": "Aarav Sharma4",
+    "username": "aaravsharma4",
+    "password": "Password123!",
+    "bio": "Frontend engineer who loves clean chat experiences.",
+    "avatarUrl": "https://api.dicebear.com/8.x/initials/svg?seed=Aarav%20Sharma",
+    "isEmailVerified": true
+  },
+  {
     "email": "ananya.iyer@example.com",
+    "phone": "9876543205",
     "name": "Ananya Iyer",
     "username": "ananyaiyer",
     "password": "Password123!",
@@ -19,6 +51,7 @@
   },
   {
     "email": "vivaan.patel@example.com",
+    "phone": "9876543206",
     "name": "Vivaan Patel",
     "username": "vivaanpatel",
     "password": "Password123!",
@@ -28,6 +61,7 @@
   },
   {
     "email": "diya.menon@example.com",
+    "phone": "9876543207",
     "name": "Diya Menon",
     "username": "diyamenon",
     "password": "Password123!",
@@ -37,6 +71,7 @@
   },
   {
     "email": "kabir.khan@example.com",
+    "phone": "9876543208",
     "name": "Kabir Khan",
     "username": "kabirkhan",
     "password": "Password123!",
@@ -46,6 +81,7 @@
   },
   {
     "email": "isha.singh@example.com",
+    "phone": "9876543209",
     "name": "Isha Singh",
     "username": "ishasingh",
     "password": "Password123!",
@@ -55,6 +91,7 @@
   },
   {
     "email": "reyan.gupta@example.com",
+    "phone": "9876543210",
     "name": "Reyan Gupta",
     "username": "reyangupta",
     "password": "Password123!",
@@ -64,6 +101,7 @@
   },
   {
     "email": "meera.nair@example.com",
+    "phone": "9876543211",
     "name": "Meera Nair",
     "username": "meeranair",
     "password": "Password123!",
@@ -73,6 +111,7 @@
   },
   {
     "email": "arjun.reddy@example.com",
+    "phone": "9876543212",
     "name": "Arjun Reddy",
     "username": "arjunreddy",
     "password": "Password123!",
@@ -82,6 +121,7 @@
   },
   {
     "email": "saanvi.rao@example.com",
+    "phone": "9876543213",
     "name": "Saanvi Rao",
     "username": "saanvirao",
     "password": "Password123!",
@@ -91,6 +131,7 @@
   },
   {
     "email": "advait.joshi@example.com",
+    "phone": "9876543214",
     "name": "Advait Joshi",
     "username": "advaitjoshi",
     "password": "Password123!",
@@ -100,6 +141,7 @@
   },
   {
     "email": "tara.desai@example.com",
+    "phone": "9876543215",
     "name": "Tara Desai",
     "username": "taradesai",
     "password": "Password123!",
@@ -109,6 +151,7 @@
   },
   {
     "email": "krish.verma@example.com",
+    "phone": "9876543216",
     "name": "Krish Verma",
     "username": "krishverma",
     "password": "Password123!",
@@ -118,6 +161,7 @@
   },
   {
     "email": "naina.mehta@example.com",
+    "phone": "9876543217",
     "name": "Naina Mehta",
     "username": "nainamehta",
     "password": "Password123!",
@@ -127,6 +171,7 @@
   },
   {
     "email": "dhruv.bose@example.com",
+    "phone": "9876543218",
     "name": "Dhruv Bose",
     "username": "dhruvbose",
     "password": "Password123!",
@@ -136,6 +181,7 @@
   },
   {
     "email": "kiara.sen@example.com",
+    "phone": "9876543219",
     "name": "Kiara Sen",
     "username": "kiarasen",
     "password": "Password123!",
@@ -145,6 +191,7 @@
   },
   {
     "email": "rishi.malhotra@example.com",
+    "phone": "9876543220",
     "name": "Rishi Malhotra",
     "username": "rishimalhotra",
     "password": "Password123!",
@@ -154,6 +201,7 @@
   },
   {
     "email": "zoya.mirza@example.com",
+    "phone": "9876543221",
     "name": "Zoya Mirza",
     "username": "zoyamirza",
     "password": "Password123!",
@@ -163,6 +211,7 @@
   },
   {
     "email": "omprakash.das@example.com",
+    "phone": "9876543222",
     "name": "Omprakash Das",
     "username": "omprakashdas",
     "password": "Password123!",
@@ -172,6 +221,7 @@
   },
   {
     "email": "priya.chopra@example.com",
+    "phone": "9876543223",
     "name": "Priya Chopra",
     "username": "priyachopra",
     "password": "Password123!",
