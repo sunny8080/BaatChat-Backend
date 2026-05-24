@@ -1,0 +1,293 @@
+[
+  {
+    "id": "chat-1",
+    "type": "personal",
+    "name": "Aarav Mehta",
+    "avatarUrl": "https://i.pravatar.cc/150?img=11",
+    "isOnline": true,
+    "lastMessage": {
+      "id": "message-1",
+      "sender": {
+        "id": "6a11b5edbbe053af59ac6646",
+        "name": "Aarav Mehta"
+      },
+      "type": "text",
+      "text": "Can we review the new chat screen today?",
+      "createdAt": "2026-05-24T09:15:00.000Z"
+    },
+    "lastMessageAt": "2026-05-24T09:15:00.000Z",
+    "activeNotification": 2
+  },
+  {
+    "id": "chat-2",
+    "type": "personal",
+    "name": "Nisha Rao",
+    "avatarUrl": "https://i.pravatar.cc/150?img=32",
+    "isOnline": false,
+    "lastMessage": {
+      "id": "message-2",
+      "sender": {
+        "id": "user-2",
+        "name": "Nisha Rao"
+      },
+      "type": "text",
+      "text": "The profile avatars are looking much cleaner now.",
+      "createdAt": "2026-05-23T18:42:00.000Z"
+    },
+    "lastMessageAt": "2026-05-23T18:42:00.000Z",
+    "activeNotification": 0
+  },
+  {
+    "id": "chat-3",
+    "type": "group",
+    "name": "BaatChat Core",
+    "avatarUrl": "https://i.pravatar.cc/150?img=48",
+    "lastMessage": {
+      "id": "message-3",
+      "sender": {
+        "id": "user-3",
+        "name": "Kabir Singh"
+      },
+      "type": "text",
+      "text": "API contracts are ready for the chat list.",
+      "createdAt": "2026-05-24T07:30:00.000Z"
+    },
+    "lastMessageAt": "2026-04-24T07:30:00.000Z",
+    "activeNotification": 5
+  },
+  {
+    "id": "chat-4",
+    "type": "personal",
+    "name": "Meera Joshi",
+    "avatarUrl": "https://i.pravatar.cc/150?img=25",
+    "isOnline": true,
+    "lastMessage": {
+      "id": "message-4",
+      "sender": {
+        "id": "user-4",
+        "name": "Meera Joshi"
+      },
+      "type": "text",
+      "text": "I added the latest test notes in the thread.",
+      "createdAt": "2026-05-22T14:10:00.000Z"
+    },
+    "lastMessageAt": "2026-05-22T14:10:00.000Z",
+    "activeNotification": 1
+  },
+  {
+    "id": "chat-5",
+    "type": "group",
+    "name": "Design Review",
+    "avatarUrl": "https://i.pravatar.cc/150?img=60",
+    "lastMessage": {
+      "id": "message-5",
+      "sender": {
+        "id": "user-5",
+        "name": "Riya Kapoor",
+        "bio": "Design lead",
+        "username": "riya",
+        "avatarUrl": "https://i.pravatar.cc/150?img=60",
+        "status": "accepted"
+      },
+      "type": "text",
+      "text": "Let us lock the final empty-state copy tomorrow.",
+      "createdAt": "2026-05-21T11:25:00.000Z"
+    },
+    "lastMessageAt": "2026-05-21T11:25:00.000Z",
+    "activeNotification": 0
+  },
+  {
+    "id": "chat-1",
+    "type": "personal",
+    "name": "Aarav Mehta",
+    "avatarUrl": "https://i.pravatar.cc/150?img=11",
+    "isOnline": true,
+    "lastMessage": {
+      "id": "message-1",
+      "sender": {
+        "id": "6a11b5edbbe053af59ac6646",
+        "name": "Aarav Mehta"
+      },
+      "type": "text",
+      "text": "Can we review the new chat screen today?",
+      "createdAt": "2026-05-24T09:15:00.000Z"
+    },
+    "lastMessageAt": "2026-05-24T09:15:00.000Z",
+    "activeNotification": 2
+  },
+  {
+    "id": "chat-2",
+    "type": "personal",
+    "name": "Nisha Rao",
+    "avatarUrl": "https://i.pravatar.cc/150?img=32",
+    "isOnline": false,
+    "lastMessage": {
+      "id": "message-2",
+      "sender": {
+        "id": "user-2",
+        "name": "Nisha Rao"
+      },
+      "type": "text",
+      "text": "The profile avatars are looking much cleaner now.",
+      "createdAt": "2026-05-23T18:42:00.000Z"
+    },
+    "lastMessageAt": "2026-05-23T18:42:00.000Z",
+    "activeNotification": 0
+  },
+  {
+    "id": "chat-3",
+    "type": "group",
+    "name": "BaatChat Core",
+    "avatarUrl": "https://i.pravatar.cc/150?img=48",
+    "lastMessage": {
+      "id": "message-3",
+      "sender": {
+        "id": "user-3",
+        "name": "Kabir Singh"
+      },
+      "type": "text",
+      "text": "API contracts are ready for the chat list.",
+      "createdAt": "2026-05-24T07:30:00.000Z"
+    },
+    "lastMessageAt": "2026-04-24T07:30:00.000Z",
+    "activeNotification": 5
+  },
+  {
+    "id": "chat-4",
+    "type": "personal",
+    "name": "Meera Joshi",
+    "avatarUrl": "https://i.pravatar.cc/150?img=25",
+    "isOnline": true,
+    "lastMessage": {
+      "id": "message-4",
+      "sender": {
+        "id": "user-4",
+        "name": "Meera Joshi"
+      },
+      "type": "text",
+      "text": "I added the latest test notes in the thread.",
+      "createdAt": "2026-05-22T14:10:00.000Z"
+    },
+    "lastMessageAt": "2026-05-22T14:10:00.000Z",
+    "activeNotification": 1
+  },
+  {
+    "id": "chat-5",
+    "type": "group",
+    "name": "Design Review",
+    "avatarUrl": "https://i.pravatar.cc/150?img=60",
+    "lastMessage": {
+      "id": "message-5",
+      "sender": {
+        "id": "user-5",
+        "name": "Riya Kapoor",
+        "bio": "Design lead",
+        "username": "riya",
+        "avatarUrl": "https://i.pravatar.cc/150?img=60",
+        "status": "accepted"
+      },
+      "type": "text",
+      "text": "Let us lock the final empty-state copy tomorrow.",
+      "createdAt": "2026-05-21T11:25:00.000Z"
+    },
+    "lastMessageAt": "2026-05-21T11:25:00.000Z",
+    "activeNotification": 0
+  },
+  {
+    "id": "chat-1",
+    "type": "personal",
+    "name": "Aarav Mehta",
+    "avatarUrl": "https://i.pravatar.cc/150?img=11",
+    "isOnline": true,
+    "lastMessage": {
+      "id": "message-1",
+      "sender": {
+        "id": "6a11b5edbbe053af59ac6646",
+        "name": "Aarav Mehta"
+      },
+      "type": "text",
+      "text": "Can we review the new chat screen today?",
+      "createdAt": "2026-05-24T09:15:00.000Z"
+    },
+    "lastMessageAt": "2026-05-24T09:15:00.000Z",
+    "activeNotification": 2
+  },
+  {
+    "id": "chat-2",
+    "type": "personal",
+    "name": "Nisha Rao",
+    "avatarUrl": "https://i.pravatar.cc/150?img=32",
+    "isOnline": false,
+    "lastMessage": {
+      "id": "message-2",
+      "sender": {
+        "id": "user-2",
+        "name": "Nisha Rao"
+      },
+      "type": "text",
+      "text": "The profile avatars are looking much cleaner now.",
+      "createdAt": "2026-05-23T18:42:00.000Z"
+    },
+    "lastMessageAt": "2026-05-23T18:42:00.000Z",
+    "activeNotification": 0
+  },
+  {
+    "id": "chat-3",
+    "type": "group",
+    "name": "BaatChat Core",
+    "avatarUrl": "https://i.pravatar.cc/150?img=48",
+    "lastMessage": {
+      "id": "message-3",
+      "sender": {
+        "id": "user-3",
+        "name": "Kabir Singh"
+      },
+      "type": "text",
+      "text": "API contracts are ready for the chat list.",
+      "createdAt": "2026-05-24T07:30:00.000Z"
+    },
+    "lastMessageAt": "2026-04-24T07:30:00.000Z",
+    "activeNotification": 5
+  },
+  {
+    "id": "chat-4",
+    "type": "personal",
+    "name": "Meera Joshi",
+    "avatarUrl": "https://i.pravatar.cc/150?img=25",
+    "isOnline": true,
+    "lastMessage": {
+      "id": "message-4",
+      "sender": {
+        "id": "user-4",
+        "name": "Meera Joshi"
+      },
+      "type": "text",
+      "text": "I added the latest test notes in the thread.",
+      "createdAt": "2026-05-22T14:10:00.000Z"
+    },
+    "lastMessageAt": "2026-05-22T14:10:00.000Z",
+    "activeNotification": 1
+  },
+  {
+    "id": "chat-5",
+    "type": "group",
+    "name": "Design Review",
+    "avatarUrl": "https://i.pravatar.cc/150?img=60",
+    "lastMessage": {
+      "id": "message-5",
+      "sender": {
+        "id": "user-5",
+        "name": "Riya Kapoor",
+        "bio": "Design lead",
+        "username": "riya",
+        "avatarUrl": "https://i.pravatar.cc/150?img=60",
+        "status": "accepted"
+      },
+      "type": "text",
+      "text": "Let us lock the final empty-state copy tomorrow.",
+      "createdAt": "2026-05-21T11:25:00.000Z"
+    },
+    "lastMessageAt": "2026-05-21T11:25:00.000Z",
+    "activeNotification": 0
+  }
+]
