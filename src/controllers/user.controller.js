@@ -314,6 +314,22 @@ export const acceptFriendRequest = asyncHandler(async (req, res) => {
     throw new ApiError(404, 'Friend request not found');
   }
 
+  // update users friends list
+  await User.bulkWrite([
+    {
+      updateOne: {
+        filter: { _id: sender._id },
+        update: { $addToSet: { friends: req.user._id } },
+      },
+    },
+    {
+      updateOne: {
+        filter: { _id: req.user._id },
+        update: { $addToSet: { friends: sender._id } },
+      },
+    },
+  ]);
+
   return res.status(200).json(
     new ApiResponse(
       200,
@@ -503,6 +519,41 @@ export const cancelFriendRequest = asyncHandler(async (req, res) => {
         friendship,
       },
       'Friend request cancelled successfully',
+    ),
+  );
+});
+
+/**
+ * Fetch all accepted friends for the authenticated user.
+ *
+ * @route GET /api/v1/users/fetch-friends
+ * @access Private
+ * @param {import('express').Request & { user: { _id: import('mongoose').Types.ObjectId } }} req
+ * @param {import('express').Response} res
+ * @returns {Promise<void>} Sends sanitized friend details in an ApiResponse.
+ */
+export const fetchFriends = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id)
+    .select('friends')
+    .populate({
+      path: 'friends',
+      select: 'name username avatarUrl bio email phone lastSeenAt',
+    })
+    .lean();
+
+  const friends = (user?.friends ?? []).map((friend) => {
+    const sanitizedFriend = sanitizeUser(friend);
+    sanitizedFriend.isOnline = onlineUsers.isOnline(friend._id);
+    return sanitizedFriend;
+  });
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        friends,
+      },
+      'Friends fetched successfully',
     ),
   );
 });

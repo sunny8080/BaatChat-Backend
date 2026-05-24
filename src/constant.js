@@ -12,18 +12,18 @@ export const UserLoginTypes = {
 };
 
 /**
- * Supported conversation types available in chat flows.
+ * Supported chat types available in chat flows.
  *
  * @readonly
  * @enum {string}
  */
-export const conversationType = {
+export const ChatType = {
   PERSONAL: 'personal',
   GROUP: 'group',
 };
 
 /**
- * Supported message content types available in conversations.
+ * Supported message content types available in chats.
  *
  * @readonly
  * @enum {string}
@@ -37,7 +37,7 @@ export const messageType = {
 };
 
 /**
- * Supported call media types available in conversations.
+ * Supported call media types available in chats.
  *
  * @readonly
  * @enum {string}

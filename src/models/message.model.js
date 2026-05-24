@@ -51,9 +51,9 @@ const attachmentSchema = new Schema(
 
 const messageSchema = new Schema(
   {
-    conversation: {
+    chat: {
       type: Schema.Types.ObjectId,
-      ref: 'Conversation',
+      ref: 'Chat',
       required: true,
       index: true,
     },
@@ -156,10 +156,10 @@ messageSchema.pre('save', function (next) {
 
 /**
  * Common chat queries:
- * fetch conversation messages
+ * fetch chat messages
  */
 messageSchema.index({
-  conversation: 1,
+  chat: 1,
   createdAt: -1,
 });
 

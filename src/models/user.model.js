@@ -91,6 +91,12 @@ const userSchema = new Schema(
       type: Date,
       default: Date.now,
     },
+    friends: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
     blockedUsers: [
       // TODO - future scope, for now won't be user for now
       {

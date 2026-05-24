@@ -1,13 +1,13 @@
 import mongoose, { Schema } from 'mongoose';
 import ApiError from '../utils/ApiError.js';
-import { conversationType } from '../constant';
+import { ChatType } from '../constant.js';
 
-const conversationSchema = new Schema(
+const chatSchema = new Schema(
   {
     type: {
       type: String,
-      enum: Object.values(conversationType),
-      default: conversationType.PERSONAL,
+      enum: Object.values(ChatType),
+      default: ChatType.PERSONAL,
     },
     name: {
       type: String,
@@ -38,9 +38,10 @@ const conversationSchema = new Schema(
         required: true,
       },
     ],
-    personalConversationKey: {
+    personalChatKey: {
       // sort key before saving, u1_u2
       type: String,
+      select: false,
     },
     admins: [
       {
@@ -69,7 +70,9 @@ const conversationSchema = new Schema(
   },
 );
 
-conversationSchema.pre('save', function (next) {
+// TODO - add default avatar url
+
+chatSchema.pre('save', function (next) {
   // duplicate activeMembers not allowed
   const uniqueMembers = [...new Set(this.activeMembers.map(String))];
 
@@ -79,45 +82,45 @@ conversationSchema.pre('save', function (next) {
 
   // activeMembers required
   if (!this.activeMembers || this.activeMembers.length === 0) {
-    return next(new ApiError(400, 'Conversation must have members'));
+    return next(new ApiError(400, 'Chat must have members'));
   }
 
   // personal chat validation
-  if (this.type === conversationType.PERSONAL) {
+  if (this.type === ChatType.PERSONAL) {
     if (this.activeMembers.length !== 2) {
-      return next(new ApiError(400, 'Personal conversation must contain exactly 2 members'));
+      return next(new ApiError(400, 'Personal chat must contain exactly 2 members'));
     }
 
     if (this.isModified('activeMembers')) {
       // generate deterministic key
       const sortedMembers = this.activeMembers.map(String).sort();
-      this.personalConversationKey = sortedMembers.join('_');
+      this.personalChatKey = sortedMembers.join('_');
     }
   }
 
   // group validation
-  if (this.type === conversationType.GROUP) {
+  if (this.type === ChatType.GROUP) {
     if (this.activeMembers.length < 2 || this.activeMembers.length > 50) {
       return next(new ApiError(400, 'Group must contain 2-50 members'));
     }
 
     if (this.isModified('activeMembers')) {
       // group should not have personal key
-      this.personalConversationKey = undefined;
+      this.personalChatKey = undefined;
     }
   }
   next();
 });
 
-conversationSchema.index({ activeMembers: 1 });
-conversationSchema.index({ lastMessageAt: -1 });
+chatSchema.index({ activeMembers: 1 });
+chatSchema.index({ lastMessageAt: -1 });
 
-// personalConversationKey will avoid creating duplicate personal chat for same set of users
+// personalChatKey will avoid creating duplicate personal chat for same set of users
 // like userA and userB can have only one personal chat
 // it's value will be [u1_u2] and u1<u2
-conversationSchema.index(
+chatSchema.index(
   {
-    personalConversationKey: 1,
+    personalChatKey: 1,
   },
   {
     unique: true,
@@ -128,10 +131,10 @@ conversationSchema.index(
 );
 
 /**
- * Conversation document model.
+ * Chat document model.
  *
- * @typedef {import('mongoose').InferSchemaType<typeof conversationSchema>} ConversationDocument
- * @type {mongoose.Model<ConversationDocument>}
+ * @typedef {import('mongoose').InferSchemaType<typeof chatSchema>} ChatDocument
+ * @type {mongoose.Model<ChatDocument>}
  */
-const Conversation = mongoose.model('Conversation', conversationSchema);
-export default Conversation;
+const Chat = mongoose.model('Chat', chatSchema);
+export default Chat;
