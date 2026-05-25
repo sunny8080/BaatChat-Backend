@@ -31,15 +31,18 @@ const chatSchema = new Schema(
         required: true,
       },
     ],
-    members: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'User',
-        required: true,
-      },
-    ],
+    members: {
+      type: [
+        {
+          type: Schema.Types.ObjectId,
+          ref: 'User',
+          required: true,
+        },
+      ],
+      select: false,
+    },
     personalChatKey: {
-      // sort key before saving, u1_u2
+      // sort key before saving, u1_u2 , for personal chat only
       type: String,
       select: false,
     },
@@ -53,12 +56,15 @@ const chatSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: 'User',
     },
-    deletedBy: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'User',
-      },
-    ],
+    deletedBy: {
+      type: [
+        {
+          type: Schema.Types.ObjectId,
+          ref: 'User',
+        },
+      ],
+      select: false,
+    },
     lastMessage: {
       type: Schema.Types.ObjectId,
       ref: 'Message',

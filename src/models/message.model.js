@@ -75,12 +75,10 @@ const messageSchema = new Schema(
     },
     attachments: [attachmentSchema],
     reactions: [reactionSchema],
-
     replyTo: {
       type: Schema.Types.ObjectId,
       ref: 'Message',
     },
-
     seenBy: [
       {
         user: {
@@ -95,7 +93,6 @@ const messageSchema = new Schema(
         },
       },
     ],
-
     deliveredTo: [
       {
         user: {
@@ -110,20 +107,21 @@ const messageSchema = new Schema(
         },
       },
     ],
-
     editedAt: Date,
-
     deletedForEveryone: {
       type: Boolean,
       default: false,
+      select: false,
     },
-
-    deletedBy: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'User',
-      },
-    ],
+    deletedBy: {
+      type: [
+        {
+          type: Schema.Types.ObjectId,
+          ref: 'User',
+        },
+      ],
+      select: false,
+    },
   },
   {
     timestamps: true,

@@ -1,0 +1,169 @@
+[
+  {
+    "id": "chat-personal-1",
+    "type": "personal",
+    "name": "Aarav Mehta",
+    "description": "Personal chat with Aarav",
+    "avatarUrl": "https://i.pravatar.cc/150?img=11",
+    "createdBy": {
+      "id": "user-1",
+      "name": "Sunny Kumar",
+      "username": "sunny",
+      "avatarUrl": "https://i.pravatar.cc/150?img=5"
+    },
+    "lastSeenAt": "2026-05-23T09:18:00.000Z",
+    "lastMessageAt": "2026-05-25T09:18:00.000Z",
+    "createdAt": "2026-05-20T08:00:00.000Z",
+    "updatedAt": "2026-05-25T09:18:00.000Z",
+    "isOnline": true,
+    "messages": [
+      {
+        "id": "msg-personal-1",
+        "sender": {
+          "id": "user-2",
+          "name": "Aarav Mehta",
+          "username": "aarav",
+          "avatarUrl": "https://i.pravatar.cc/150?img=11"
+        },
+        "type": "text",
+        "text": "Hey, are we still shipping the chat screen today?",
+        "createdAt": "2026-05-25T09:12:00.000Z"
+      },
+      {
+        "id": "msg-personal-2",
+        "sender": {
+          "id": "user-1",
+          "name": "Sunny Kumar",
+          "username": "sunny",
+          "avatarUrl": "https://i.pravatar.cc/150?img=5"
+        },
+        "type": "text",
+        "text": "Yes, wrapping up the details panel now.",
+        "createdAt": "2026-05-25T09:16:00.000Z"
+      },
+      {
+        "id": "msg-personal-3",
+        "sender": {
+          "id": "user-2",
+          "name": "Aarav Mehta",
+          "username": "aarav",
+          "avatarUrl": "https://i.pravatar.cc/150?img=11"
+        },
+        "type": "text",
+        "text": "Perfect. I will test it after lunch.",
+        "createdAt": "2026-05-25T09:18:00.000Z"
+      }
+    ],
+    "lastMessage": {
+      "id": "msg-personal-3",
+      "sender": {
+        "id": "user-2",
+        "name": "Aarav Mehta",
+        "username": "aarav",
+        "avatarUrl": "https://i.pravatar.cc/150?img=11"
+      },
+      "type": "text",
+      "text": "Perfect. I will test it after lunch.",
+      "createdAt": "2026-05-25T09:18:00.000Z"
+    },
+    "activeNotification": 1
+  },
+  {
+    "id": "chat-group-1",
+    "type": "group",
+    "name": "BaatChat Builders",
+    "description": "Product and engineering sync for BaatChat.",
+    "avatarUrl": "https://i.pravatar.cc/150?img=28",
+    "activeMembers": [
+      {
+        "id": "user-1",
+        "name": "Sunny Kumar",
+        "username": "sunny",
+        "avatarUrl": "https://i.pravatar.cc/150?img=5",
+        "isOnline": true
+      },
+      {
+        "id": "user-3",
+        "name": "Mira Shah",
+        "username": "mira",
+        "avatarUrl": "https://i.pravatar.cc/150?img=32",
+        "isOnline": true
+      },
+      {
+        "id": "user-4",
+        "name": "Kabir Rao",
+        "username": "kabir",
+        "avatarUrl": "https://i.pravatar.cc/150?img=14",
+        "isOnline": false
+      }
+    ],
+    "admins": [
+      {
+        "id": "user-1",
+        "name": "Sunny Kumar",
+        "username": "sunny",
+        "avatarUrl": "https://i.pravatar.cc/150?img=5"
+      }
+    ],
+    "createdBy": {
+      "id": "user-1",
+      "name": "Sunny Kumar",
+      "username": "sunny",
+      "avatarUrl": "https://i.pravatar.cc/150?img=5"
+    },
+    "lastMessageAt": "2026-05-25T10:05:00.000Z",
+    "createdAt": "2026-05-18T11:30:00.000Z",
+    "updatedAt": "2026-05-25T10:05:00.000Z",
+    "messages": [
+      {
+        "id": "msg-group-1",
+        "sender": {
+          "id": "user-3",
+          "name": "Mira Shah",
+          "username": "mira",
+          "avatarUrl": "https://i.pravatar.cc/150?img=32"
+        },
+        "type": "text",
+        "text": "I pushed the sidebar polish. Can someone review the spacing?",
+        "createdAt": "2026-05-25T09:52:00.000Z"
+      },
+      {
+        "id": "msg-group-2",
+        "sender": {
+          "id": "user-4",
+          "name": "Kabir Rao",
+          "username": "kabir",
+          "avatarUrl": "https://i.pravatar.cc/150?img=14"
+        },
+        "type": "text",
+        "text": "On it. The unread states look good on mobile.",
+        "createdAt": "2026-05-25T09:58:00.000Z"
+      },
+      {
+        "id": "msg-group-3",
+        "sender": {
+          "id": "user-1",
+          "name": "Sunny Kumar",
+          "username": "sunny",
+          "avatarUrl": "https://i.pravatar.cc/150?img=5"
+        },
+        "type": "text",
+        "text": "Nice. I am adding mock chat details so we can wire the view next.",
+        "createdAt": "2026-05-25T10:05:00.000Z"
+      }
+    ],
+    "lastMessage": {
+      "id": "msg-group-3",
+      "sender": {
+        "id": "user-1",
+        "name": "Sunny Kumar",
+        "username": "sunny",
+        "avatarUrl": "https://i.pravatar.cc/150?img=5"
+      },
+      "type": "text",
+      "text": "Nice. I am adding mock chat details so we can wire the view next.",
+      "createdAt": "2026-05-25T10:05:00.000Z"
+    },
+    "activeNotification": 3
+  }
+]
