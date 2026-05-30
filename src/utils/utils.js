@@ -25,7 +25,10 @@ export const generateOTP = (email) => {
  * @returns {string} Hex-encoded SHA-256 hash used for OTP verification.
  */
 export const hashOTP = (email, otp) => {
-  return crypto.createHash('sha256').update(`${email}:${otp}:${process.env.OTP_SECRET}`).digest('hex');
+  return crypto
+    .createHash('sha256')
+    .update(`${email}:${otp}:${process.env.OTP_SECRET}`)
+    .digest('hex');
 };
 
 /**
@@ -119,10 +122,55 @@ export const generateAccessAndRefreshTokens = async (userId) => {
  */
 export const sanitizeUser = (user) => {
   const userObj = user instanceof mongoose.Document ? user.toObject() : user;
-  userObj.id = userObj._id;
-  delete userObj._id;
-  delete userObj.__v;
-  return userObj;
+  const { _id, __v, ...rest } = userObj;
+  const sanitizedUser = {
+    ...rest,
+    id: _id.toString(),
+  };
+
+  return sanitizedUser;
+};
+
+/**
+ * Normalizes a chat object for API responses.
+ *
+ * @param {object} chat - Chat object to sanitize.
+ * @returns {object} Chat object with `id` mapped from `_id`, populated members sanitized, and internal fields removed.
+ */
+export const sanitizeChat = (chat) => {
+  const { _id, __v, unreadCounts, lastMessage, activeMembers, admins, ...rest } = chat;
+  const sanitizedChat = {
+    ...rest,
+    id: _id.toString(),
+    activeMembers: activeMembers?.map((mem) => sanitizeUser(mem)) || [],
+    admins: admins?.map((mem) => sanitizeUser(mem)) || [],
+    lastMessage: lastMessage
+      ? {
+          ...lastMessage,
+          id: lastMessage._id.toString(),
+          _id: undefined,
+          sender: lastMessage.sender ? sanitizeUser(lastMessage.sender) : null,
+        }
+      : null,
+  };
+
+  return sanitizedChat;
+};
+
+/**
+ * Normalizes a message object for API responses.
+ *
+ * @param {object} msg - Message object to sanitize.
+ * @returns {object} Message object with `id` mapped from `_id`, sanitized sender, and internal fields removed.
+ */
+export const sanitizeMessage = (msg) => {
+  const { _id, __v, sender, ...rest } = msg;
+  const sanitizedMsg = {
+    ...rest,
+    id: _id.toString(),
+    sender: sanitizeUser(sender),
+  };
+  return sanitizedMsg;
 };
 
 /**

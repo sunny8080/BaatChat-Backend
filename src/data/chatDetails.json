@@ -66,7 +66,7 @@
       "text": "Perfect. I will test it after lunch.",
       "createdAt": "2026-05-25T09:18:00.000Z"
     },
-    "activeNotification": 1
+    "unreadCount": 1
   },
   {
     "id": "chat-group-1",
@@ -164,6 +164,6 @@
       "text": "Nice. I am adding mock chat details so we can wire the view next.",
       "createdAt": "2026-05-25T10:05:00.000Z"
     },
-    "activeNotification": 3
+    "unreadCount": 3
   }
 ]

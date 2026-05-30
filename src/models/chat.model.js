@@ -12,7 +12,6 @@ const chatSchema = new Schema(
     name: {
       type: String,
       trim: true,
-      default: '',
     },
     description: {
       type: String,
@@ -22,7 +21,6 @@ const chatSchema = new Schema(
     avatarUrl: {
       type: String,
       trim: true,
-      default: '',
     },
     activeMembers: [
       {
@@ -31,6 +29,13 @@ const chatSchema = new Schema(
         required: true,
       },
     ],
+    unreadCounts: {
+      // store unread message count for each user in this chat
+      // Map -> unreadCounts[userId] = unreadCnt
+      type: Map,
+      of: Number,
+      default: {},
+    },
     members: {
       type: [
         {
@@ -73,33 +78,34 @@ const chatSchema = new Schema(
   },
   {
     timestamps: true,
+    minimize: false, // so that we can store empty unreadCounts map
   },
 );
 
 // TODO - add default avatar url
 
-chatSchema.pre('save', function (next) {
+chatSchema.pre('save', function () {
   // duplicate activeMembers not allowed
-  const uniqueMembers = [...new Set(this.activeMembers.map(String))];
+  const uniqueMembers = [...new Set(this.activeMembers.map((m) => m.toString()))];
 
   if (uniqueMembers.length !== this.activeMembers.length) {
-    return next(new ApiError(400, 'Duplicate members are not allowed'));
+    throw new ApiError(400, 'Duplicate members are not allowed');
   }
 
   // activeMembers required
-  if (!this.activeMembers || this.activeMembers.length === 0) {
-    return next(new ApiError(400, 'Chat must have members'));
+  if (!Array.isArray(this.activeMembers) || this.activeMembers.length === 0) {
+    throw new ApiError(400, 'Chat must have members');
   }
 
   // personal chat validation
   if (this.type === ChatType.PERSONAL) {
     if (this.activeMembers.length !== 2) {
-      return next(new ApiError(400, 'Personal chat must contain exactly 2 members'));
+      throw new ApiError(400, 'Personal chat must contain exactly 2 members');
     }
 
     if (this.isModified('activeMembers')) {
       // generate deterministic key
-      const sortedMembers = this.activeMembers.map(String).sort();
+      const sortedMembers = this.activeMembers.map((m) => m.toString()).sort();
       this.personalChatKey = sortedMembers.join('_');
     }
   }
@@ -107,7 +113,7 @@ chatSchema.pre('save', function (next) {
   // group validation
   if (this.type === ChatType.GROUP) {
     if (this.activeMembers.length < 2 || this.activeMembers.length > 50) {
-      return next(new ApiError(400, 'Group must contain 2-50 members'));
+      throw new ApiError(400, 'Group must contain 2-50 members');
     }
 
     if (this.isModified('activeMembers')) {
@@ -115,11 +121,12 @@ chatSchema.pre('save', function (next) {
       this.personalChatKey = undefined;
     }
   }
-  next();
 });
 
-chatSchema.index({ activeMembers: 1 });
-chatSchema.index({ lastMessageAt: -1 });
+chatSchema.index({
+  activeMembers: 1,
+  lastMessageAt: -1,
+});
 
 // personalChatKey will avoid creating duplicate personal chat for same set of users
 // like userA and userB can have only one personal chat

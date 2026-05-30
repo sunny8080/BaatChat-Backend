@@ -133,23 +133,21 @@ const messageSchema = new Schema(
  * - text
  * - attachments
  */
-messageSchema.pre('save', function (next) {
+messageSchema.pre('save', function () {
   const hasText = this.text && this.text.trim().length > 0;
 
   const hasAttachments = this.attachments && this.attachments.length > 0;
 
   if (!hasText && !hasAttachments) {
-    return next(new ApiError(400, 'Message must contain text or attachments'));
+    return new ApiError(400, 'Message must contain text or attachments');
   }
 
   // duplicate reactions by same user not allowed
   const uniqueReactionUsers = new Set(this.reactions.map((reaction) => reaction.user.toString()));
 
   if (uniqueReactionUsers.size !== this.reactions.length) {
-    return next(new ApiError(400, 'User can react only once per message'));
+    return new ApiError(400, 'User can react only once per message');
   }
-
-  next();
 });
 
 /**

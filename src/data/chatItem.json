@@ -16,7 +16,7 @@
       "createdAt": "2026-05-24T09:15:00.000Z"
     },
     "lastMessageAt": "2026-05-24T09:15:00.000Z",
-    "activeNotification": 2
+    "unreadCount": 2
   },
   {
     "id": "chat-2",
@@ -35,7 +35,7 @@
       "createdAt": "2026-05-23T18:42:00.000Z"
     },
     "lastMessageAt": "2026-05-23T18:42:00.000Z",
-    "activeNotification": 0
+    "unreadCount": 0
   },
   {
     "id": "chat-3",
@@ -53,7 +53,7 @@
       "createdAt": "2026-05-24T07:30:00.000Z"
     },
     "lastMessageAt": "2026-04-24T07:30:00.000Z",
-    "activeNotification": 5
+    "unreadCount": 5
   },
   {
     "id": "chat-4",
@@ -72,7 +72,7 @@
       "createdAt": "2026-05-22T14:10:00.000Z"
     },
     "lastMessageAt": "2026-05-22T14:10:00.000Z",
-    "activeNotification": 1
+    "unreadCount": 1
   },
   {
     "id": "chat-5",
@@ -94,7 +94,7 @@
       "createdAt": "2026-05-21T11:25:00.000Z"
     },
     "lastMessageAt": "2026-05-21T11:25:00.000Z",
-    "activeNotification": 0
+    "unreadCount": 0
   },
   {
     "id": "chat-1",
@@ -113,7 +113,7 @@
       "createdAt": "2026-05-24T09:15:00.000Z"
     },
     "lastMessageAt": "2026-05-24T09:15:00.000Z",
-    "activeNotification": 2
+    "unreadCount": 2
   },
   {
     "id": "chat-2",
@@ -132,7 +132,7 @@
       "createdAt": "2026-05-23T18:42:00.000Z"
     },
     "lastMessageAt": "2026-05-23T18:42:00.000Z",
-    "activeNotification": 0
+    "unreadCount": 0
   },
   {
     "id": "chat-3",
@@ -150,7 +150,7 @@
       "createdAt": "2026-05-24T07:30:00.000Z"
     },
     "lastMessageAt": "2026-04-24T07:30:00.000Z",
-    "activeNotification": 5
+    "unreadCount": 5
   },
   {
     "id": "chat-4",
@@ -169,7 +169,7 @@
       "createdAt": "2026-05-22T14:10:00.000Z"
     },
     "lastMessageAt": "2026-05-22T14:10:00.000Z",
-    "activeNotification": 1
+    "unreadCount": 1
   },
   {
     "id": "chat-5",
@@ -191,7 +191,7 @@
       "createdAt": "2026-05-21T11:25:00.000Z"
     },
     "lastMessageAt": "2026-05-21T11:25:00.000Z",
-    "activeNotification": 0
+    "unreadCount": 0
   },
   {
     "id": "chat-1",
@@ -210,7 +210,7 @@
       "createdAt": "2026-05-24T09:15:00.000Z"
     },
     "lastMessageAt": "2026-05-24T09:15:00.000Z",
-    "activeNotification": 2
+    "unreadCount": 2
   },
   {
     "id": "chat-2",
@@ -229,7 +229,7 @@
       "createdAt": "2026-05-23T18:42:00.000Z"
     },
     "lastMessageAt": "2026-05-23T18:42:00.000Z",
-    "activeNotification": 0
+    "unreadCount": 0
   },
   {
     "id": "chat-3",
@@ -247,7 +247,7 @@
       "createdAt": "2026-05-24T07:30:00.000Z"
     },
     "lastMessageAt": "2026-04-24T07:30:00.000Z",
-    "activeNotification": 5
+    "unreadCount": 5
   },
   {
     "id": "chat-4",
@@ -266,7 +266,7 @@
       "createdAt": "2026-05-22T14:10:00.000Z"
     },
     "lastMessageAt": "2026-05-22T14:10:00.000Z",
-    "activeNotification": 1
+    "unreadCount": 1
   },
   {
     "id": "chat-5",
@@ -288,6 +288,6 @@
       "createdAt": "2026-05-21T11:25:00.000Z"
     },
     "lastMessageAt": "2026-05-21T11:25:00.000Z",
-    "activeNotification": 0
+    "unreadCount": 0
   }
 ]

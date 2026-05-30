@@ -28,6 +28,20 @@ export const SOCKET_EVENTS = {
 };
 
 /**
+ * Chat domain socket events.
+ * @type {{
+ *   JOIN: 'chat:join',
+ *   LEAVE: 'chat:leave',
+ *   UPDATED: 'chat:updated',
+ * }}
+ */
+export const CHAT_EVENTS = {
+  JOIN: 'chat:join',
+  LEAVE: 'chat:leave',
+  UPDATED: 'chat:updated',
+};
+
+/**
  * Message domain socket events.
  * @type {{
  *   SEND: 'message:send',
@@ -70,6 +84,7 @@ export const MESSAGE_EVENTS = {
   UNPINNED: 'message:unpinned',
 
   FORWARD: 'message:forward',
+  ERROR: 'message:error',
 };
 
 // Group Events
@@ -153,10 +168,7 @@ export const PRESENCE_EVENTS = {
  */
 export const TYPING_EVENTS = {
   START: 'typing:start',
-  STOP: 'typing:stop',
-
   USER_STARTED: 'typing:user-started',
-  USER_STOPPED: 'typing:user-stopped',
 };
 
 /**

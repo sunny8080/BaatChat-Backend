@@ -34,6 +34,7 @@ export const messageType = {
   VIDEO: 'video',
   AUDIO: 'audio',
   FILE: 'file',
+  NOTIFICATION: 'notification',
 };
 
 /**

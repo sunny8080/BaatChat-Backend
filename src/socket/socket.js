@@ -21,7 +21,9 @@ export const initializeSocketIO = (io) => {
       const token = getCookie(socket.handshake.headers.cookie, 'accessToken');
 
       if (!token) {
-        return next(new SocketError('Unauthorized, token is missing!', { code: 404, type: 'TOKEN_MISSING' }));
+        return next(
+          new SocketError('Unauthorized, token is missing!', { code: 404, type: 'TOKEN_MISSING' }),
+        );
       }
 
       const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
@@ -32,7 +34,12 @@ export const initializeSocketIO = (io) => {
       socket.user = user;
       next();
     } catch (error) {
-      return next(new SocketError('Invalid or expired token', { code: 401, type: 'INVALID_OR_EXPIRED_TOKEN' }));
+      return next(
+        new SocketError('Invalid or expired token', {
+          code: 401,
+          type: 'INVALID_OR_EXPIRED_TOKEN',
+        }),
+      );
     }
   });
 
@@ -52,9 +59,10 @@ export const initializeSocketIO = (io) => {
     // mark user as online user, add this socket id to this user
     onlineUsers.add(userId, socket.id);
 
-    // emit online presence to all other users except current user
-    // TODO - future scope, emit online presence to only subscribed users or emits this only to users associated with this user
-    socket.broadcast.emit(PRESENCE_EVENTS.ONLINE, { userId });
+    // notify friends about online presence
+    socket.user.friends.forEach((friendId) => {
+      io.to(`user:${friendId}`).emit(PRESENCE_EVENTS.ONLINE, { userId });
+    });
 
     // Register socket event listener for each socket
     // every socket will have its own event listener, as these are not global event listener
@@ -70,7 +78,10 @@ export const initializeSocketIO = (io) => {
 
       // emit offline presence if users don't have any active socket
       if (!onlineUsers.isOnline(userId)) {
-        socket.broadcast.emit(PRESENCE_EVENTS.OFFLINE, { userId });
+        // notify friends about offline presence
+        socket.user.friends.forEach((friendId) => {
+          io.to(`user:${friendId}`).emit(PRESENCE_EVENTS.OFFLINE, { userId });
+        });
       }
       logger.info(`Socket disconnected: ${socket.id} user=${userId}`);
     });
