@@ -81,7 +81,7 @@ export const getChatDetails = asyncHandler(async (req, res) => {
 
   const chat = await Chat.findById(chatId)
     .sort({ lastMessageAt: -1, updatedAt: -1 })
-    .populate('activeMembers', 'name username avatarUrl lastSeenAt')
+    .populate('activeMembers', 'name username avatarUrl lastSeenAt bio email phone username')
     .populate({
       path: 'lastMessage',
       select: 'sender type text attachments createdAt',
@@ -117,6 +117,10 @@ export const getChatDetails = asyncHandler(async (req, res) => {
 
   chatData.messages = messages;
 
+  chatData.activeMembers.forEach((mem) => {
+    mem.isOnline = onlineUsers.isOnline(mem._id.toString());
+  });
+
   if (chatData.type === ChatType.PERSONAL) {
     // update name chat details in case of personal chat
     let friend =
@@ -124,8 +128,7 @@ export const getChatDetails = asyncHandler(async (req, res) => {
         ? chatData.activeMembers[1]
         : chatData.activeMembers[0];
 
-    chatData.isOnline = onlineUsers.isOnline(friend._id.toString());
-    chatData.lastSeenAt = friend.lastSeenAt;
+    chatData.friend = sanitizeUser(friend);
     chatData.name = friend.name;
     chatData.avatarUrl = friend.avatarUrl;
   }
