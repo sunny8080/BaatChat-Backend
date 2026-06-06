@@ -4,6 +4,7 @@ import Message from '../models/message.model.js';
 import User from '../models/user.model.js';
 import ApiError from '../utils/ApiError.js';
 import { sanitizeUser } from '../utils/utils.js';
+import { onlineUsers } from './onlineUsers.js';
 import { CHAT_EVENTS, MESSAGE_EVENTS, TYPING_EVENTS } from './socketEvents.js';
 
 /**
@@ -111,10 +112,20 @@ export const registerChatListeners = (io, socket) => {
         chat.unreadCounts.set(memberIdStr, unreadCount);
 
         const chatUpdatedPayload = {
-          chatId,
+          id: chat.id,
+          type: chat.type,
+          name: chat.name,
+          avatarUrl: chat.avatarUrl,
           lastMessage: populatedMessage,
+          lastMessageAt: populatedMessage.createdAt,
           unreadCount,
         };
+
+        if (chat.type === ChatType.PERSONAL) {
+          chatUpdatedPayload.name = socket.user.name;
+          chatUpdatedPayload.isOnline = onlineUsers.isOnline(senderId.toString);
+          chatUpdatedPayload.lastSeenAt = socket.user.lastSeenAt;
+        }
 
         chatUpdatedEvents.push({ memberId, chatUpdatedPayload });
       });
