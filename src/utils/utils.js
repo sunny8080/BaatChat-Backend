@@ -164,11 +164,23 @@ export const sanitizeChat = (chat) => {
  * @returns {object} Message object with `id` mapped from `_id`, sanitized sender, and internal fields removed.
  */
 export const sanitizeMessage = (msg) => {
-  const { _id, __v, sender, ...rest } = msg;
+  const { _id, __v, sender, deliveredTo, seenBy, ...rest } = msg;
   const sanitizedMsg = {
     ...rest,
     id: _id.toString(),
     sender: sanitizeUser(sender),
+    deliveredTo: deliveredTo?.map((del) => ({
+      ...del,
+      user: del.user.toString(),
+      id: del._id,
+      _id: undefined,
+    })),
+    seenBy: seenBy?.map((seen) => ({
+      ...seen,
+      user: seen.user.toString(),
+      id: seen._id,
+      _id: undefined,
+    })),
   };
   return sanitizedMsg;
 };

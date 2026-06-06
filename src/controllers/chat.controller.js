@@ -6,6 +6,7 @@ import { onlineUsers } from '../socket/onlineUsers.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import { sanitizeChat, sanitizeMessage, sanitizeUser } from '../utils/utils.js';
+import ApiError from '../utils/ApiError.js';
 
 /**
  * Fetches all chats for the authenticated user, including unread counts,
@@ -73,6 +74,7 @@ export const getCurrentUserChats = asyncHandler(async (req, res) => {
  */
 export const getChatDetails = asyncHandler(async (req, res) => {
   let chatId = req.body?.chatId?.trim() ?? '';
+  let nextCursor = req.body?.nextCursor?.trim() ?? '';
   const userId = req.user._id;
 
   if (!chatId) {
@@ -99,14 +101,26 @@ export const getChatDetails = asyncHandler(async (req, res) => {
   await chat.save({ validateBeforeSave: false });
   const chatData = { ...chat.toObject(), unreadCount: 0 };
 
-  let messages = await Message.find({
+  const msgQuery = {
     chat: chatId,
     deletedBy: { $ne: userId },
-  })
+  };
+
+  if (nextCursor) {
+    // to find previous messages, id are sorted in mongodb,
+    // so find document which has lower id than nextCursor
+    msgQuery._id = { $lt: nextCursor };
+  }
+
+  let messages = await Message.find(msgQuery)
     .populate('sender', 'name username avatarUrl')
-    .sort({ createdAt: -1 })
+    .sort({ _id: -1 })
     .limit(30)
     .lean();
+
+  // if message are in count of limit then it may happen that more message are there
+  // send next cursor as last message, which will be used later for pagination
+  nextCursor = messages.length == 30 ? messages.at(-1)._id.toString() : '';
 
   if (messages.length) {
     messages.reverse();
@@ -116,6 +130,7 @@ export const getChatDetails = asyncHandler(async (req, res) => {
   }
 
   chatData.messages = messages;
+  chatData.nextCursor = nextCursor;
 
   chatData.activeMembers.forEach((mem) => {
     mem.isOnline = onlineUsers.isOnline(mem._id.toString());
