@@ -20,7 +20,7 @@ import ApiError from '../utils/ApiError.js';
 export const getCurrentUserChats = asyncHandler(async (req, res) => {
   const userId = req.user._id;
 
-  let chats = await Chat.find({ activeMembers: userId })
+  let chats = await Chat.find({ members: userId, deletedBy: { $ne: userId } })
     .select('-admins -createdBy -createdAt -updatedAt"')
     .sort({ lastMessageAt: -1, updatedAt: -1 })
     .populate('activeMembers', 'name username avatarUrl')
