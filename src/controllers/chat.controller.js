@@ -285,11 +285,10 @@ export const createGroup = asyncHandler(async (req, res) => {
     })
     .lean();
 
+  group.messages = [populatedMessage];
   group.activeMembers.forEach((mem) => {
     mem.isOnline = onlineUsers.isOnline(mem._id.toString());
   });
-
-  group.messages = [populatedMessage];
 
   // notify to all other members using socket
   const io = req.app.get('io');
