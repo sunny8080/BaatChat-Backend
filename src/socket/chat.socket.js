@@ -3,7 +3,7 @@ import Chat from '../models/chat.model.js';
 import Message from '../models/message.model.js';
 import User from '../models/user.model.js';
 import ApiError from '../utils/ApiError.js';
-import { sanitizeUser } from '../utils/utils.js';
+import { sanitizeMessage, sanitizeUser } from '../utils/utils.js';
 import { onlineUsers } from './onlineUsers.js';
 import { CHAT_EVENTS, MESSAGE_EVENTS, TYPING_EVENTS } from './socketEvents.js';
 
@@ -88,15 +88,9 @@ export const registerChatListeners = (io, socket) => {
       chat.lastMessageAt = message.createdAt;
 
       // populated message will be used to update active chat
-      const populatedMessage = await Message.findById(message._id)
-        .populate('sender', 'name username avatarUrl')
-        .lean();
-
-      // sanitize
-      populatedMessage.id = populatedMessage._id.toString();
-      populatedMessage._id = undefined;
-      populatedMessage.sender.id = populatedMessage.sender._id;
-      populatedMessage.sender._id = undefined;
+      const populatedMessage = sanitizeMessage(
+        await Message.findById(message._id).populate('sender', 'name username avatarUrl').lean(),
+      );
 
       // receivers may not have opened this chat, so send chat updated events to all active members
       const chatUpdatedEvents = [];

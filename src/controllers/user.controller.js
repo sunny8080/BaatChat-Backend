@@ -42,12 +42,20 @@ export const updateUserDetails = asyncHandler(async (req, res) => {
 
   if (avBuffer) {
     if (avBuffer.size > process.env.AVATAR_MAX_SIZE_B) {
-      throw new ApiError(400, `Please upload a image less than ${process.env.AVATAR_MAX_SIZE_B / 1024} KB`);
+      throw new ApiError(
+        400,
+        `Please upload a image less than ${process.env.AVATAR_MAX_SIZE_B / 1024} KB`,
+      );
     }
-    const avatarType = avBuffer.mimetype.split('/')[1];
-    const fileName = `av_${req.user.id}.${avatarType}`;
+    // const avatarType = avBuffer.mimetype.split('/')[1];
+    const fileName = `av_${req.user.id}_${Date.now()}`;
 
-    const img = await uploadToCloudinary({ file: avBuffer, fileName, folder: process.env.AVATAR_FOLDER_NAME, quality: 75 });
+    const img = await uploadToCloudinary({
+      file: avBuffer,
+      fileName,
+      folder: process.env.AVATAR_FOLDER_NAME,
+      quality: 75,
+    });
     avatarUrl = img.secure_url;
   }
 
@@ -142,7 +150,9 @@ export const getUserDetails = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Username is required');
   }
 
-  const user = await User.findOne({ username, isEmailVerified: true }).select('name username avatarUrl bio email phone lastSeenAt').lean();
+  const user = await User.findOne({ username, isEmailVerified: true })
+    .select('name username avatarUrl bio email phone lastSeenAt')
+    .lean();
 
   if (!user) {
     throw new ApiError(404, 'User not found');
@@ -232,7 +242,12 @@ export const sendFriendRequest = asyncHandler(async (req, res) => {
 
     if (existingFriendship.status === friendshipStatus.PENDING) {
       const requestSentByUser = existingFriendship.sender.equals(req.user._id);
-      throw new ApiError(409, requestSentByUser ? 'Friend request already sent' : 'You already have a friend request from this user');
+      throw new ApiError(
+        409,
+        requestSentByUser
+          ? 'Friend request already sent'
+          : 'You already have a friend request from this user',
+      );
     }
 
     if (existingFriendship.status === friendshipStatus.BLOCKED) {
@@ -538,6 +553,7 @@ export const fetchFriends = asyncHandler(async (req, res) => {
     .populate({
       path: 'friends',
       select: 'name username avatarUrl bio email phone lastSeenAt',
+      options: { sort: { name: 1 } },
     })
     .lean();
 

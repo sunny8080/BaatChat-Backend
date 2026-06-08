@@ -25,13 +25,14 @@ export const uploadImage = multer({
   limits: {
     fileSize: process.env.UPLOAD_FILE_SIZE,
   },
+
   fileFilter: (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/svg+xml'];
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
 
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new ApiError(400, 'Only jpeg, png, svg allowed'), false);
+      cb(new ApiError(400, 'Only jpeg, png allowed'), false);
     }
   },
 });

@@ -138,12 +138,11 @@ export const sanitizeUser = (user) => {
  * @returns {object} Chat object with `id` mapped from `_id`, populated members sanitized, and internal fields removed.
  */
 export const sanitizeChat = (chat) => {
-  const { _id, __v, unreadCounts, lastMessage, activeMembers, admins, ...rest } = chat;
+  const { _id, __v, unreadCounts, lastMessage, activeMembers, ...rest } = chat;
   const sanitizedChat = {
     ...rest,
     id: _id.toString(),
     activeMembers: activeMembers?.map((mem) => sanitizeUser(mem)) || [],
-    admins: admins?.map((mem) => sanitizeUser(mem)) || [],
     lastMessage: lastMessage
       ? {
           ...lastMessage,
@@ -199,4 +198,12 @@ export const getCookie = (cookies, cookieName = '') => {
     if (key === cookieName) return val;
   }
   return null;
+};
+
+// todo add js docs
+export const capitalizeWords = (str) => {
+  return str
+    .split(' ')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
 };

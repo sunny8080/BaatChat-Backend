@@ -7,6 +7,7 @@ import { PRESENCE_EVENTS, SOCKET_EVENTS } from './socketEvents.js';
 import { onlineUsers } from './onlineUsers.js';
 import { registerChatListeners } from './chat.socket.js';
 import logger from '../logger/winston.logger.js';
+import { registerGroupListeners } from './group.socket.js';
 
 /**
  * Initializes Socket.IO event handlers.
@@ -67,6 +68,7 @@ export const initializeSocketIO = (io) => {
     // Register socket event listener for each socket
     // every socket will have its own event listener, as these are not global event listener
     registerChatListeners(io, socket);
+    registerGroupListeners(io, socket);
 
     // socket event listener when user disconnect
     socket.on(SOCKET_EVENTS.DISCONNECT, async () => {

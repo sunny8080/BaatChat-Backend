@@ -1,12 +1,16 @@
 import mongoose from 'mongoose';
-import { ChatType } from '../constant.js';
+import { ChatType, messageType } from '../constant.js';
 import Chat from '../models/chat.model.js';
 import Message from '../models/message.model.js';
 import { onlineUsers } from '../socket/onlineUsers.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import asyncHandler from '../utils/asyncHandler.js';
-import { sanitizeChat, sanitizeMessage, sanitizeUser } from '../utils/utils.js';
+import { sanitizeChat, sanitizeMessage, sanitizeUser, capitalizeWords } from '../utils/utils.js';
 import ApiError from '../utils/ApiError.js';
+import { isValidObjectId } from 'mongoose';
+import User from '../models/user.model.js';
+import { uploadToCloudinary } from '../config/cloudnaryConnect.js';
+import { CHAT_EVENTS } from '../socket/socketEvents.js';
 
 /**
  * Fetches all chats for the authenticated user, including unread counts,
@@ -155,6 +159,157 @@ export const getChatDetails = asyncHandler(async (req, res) => {
         chat: sanitizeChat(chatData),
       },
       'Chats fetched successfully',
+    ),
+  );
+});
+
+// todo add js docs
+export const createGroup = asyncHandler(async (req, res) => {
+  const name = req.body?.name?.trim();
+  const description = req.body?.description?.trim() ?? '';
+  let members = req.body?.members;
+  const user = req.user;
+
+  if (!name || name.length < 2) {
+    throw new ApiError(400, 'Group name is required');
+  }
+
+  if (!req.file) {
+    throw new ApiError(400, 'Group avatar is required');
+  }
+
+  if (!members) {
+    throw new ApiError(400, 'Members are required');
+  }
+
+  // validate members
+  if (typeof members === 'string') {
+    try {
+      members = JSON.parse(members);
+    } catch {
+      members = members.split(',');
+    }
+  }
+
+  if (!Array.isArray(members)) {
+    throw new ApiError(400, 'Members must be an array of user ids');
+  }
+
+  const memberIsNotFriend = members.some((memId) => !user.friends.includes(memId));
+  if (memberIsNotFriend) {
+    throw new ApiError(400, 'Members must be friends');
+  }
+
+  const memberIds = [
+    ...new Set(
+      [req.user._id.toString(), ...members.map((memberId) => memberId?.toString().trim())].filter(
+        Boolean,
+      ),
+    ),
+  ];
+
+  if (memberIds.length < 2 || memberIds.length > 50) {
+    throw new ApiError(400, 'Group must contain 2-50 members');
+  }
+
+  if (memberIds.some((memberId) => !isValidObjectId(memberId))) {
+    throw new ApiError(400, 'Invalid member id');
+  }
+
+  const existingMembersCount = await User.countDocuments({
+    _id: { $in: memberIds },
+    isEmailVerified: true,
+  });
+
+  if (existingMembersCount !== memberIds.length) {
+    throw new ApiError(400, 'One or more members are invalid');
+  }
+
+  // validate file
+  if (req.file.size > process.env.AVATAR_MAX_SIZE_B) {
+    throw new ApiError(
+      400,
+      `Please upload a image less than ${process.env.AVATAR_MAX_SIZE_B / 1024} KB`,
+    );
+  }
+
+  // const avatarType = req.file.mimetype.split('/')[1];
+  const img = await uploadToCloudinary({
+    file: req.file,
+    fileName: `grp_${req.user.id}_${Date.now()}`,
+    folder: process.env.AVATAR_FOLDER_NAME,
+    quality: 75,
+  });
+
+  const unreadCounts = memberIds.reduce((counts, memberId) => {
+    counts[memberId] = memberId === req.user._id.toString() ? 0 : 1;
+    return counts;
+  }, {});
+
+  let group = await Chat.create({
+    type: ChatType.GROUP,
+    name,
+    description,
+    avatarUrl: img.secure_url,
+    activeMembers: memberIds,
+    members: memberIds,
+    admins: [req.user._id],
+    createdBy: req.user._id,
+    unreadCounts,
+  });
+
+  const notification = await Message.create({
+    chat: group._id,
+    sender: req.user._id.toString(),
+    type: messageType.NOTIFICATION,
+    text: `${capitalizeWords(req.user.name)} created this group`,
+  });
+
+  group.lastMessage = notification._id;
+  group.lastMessageAt = notification.createdAt;
+  await group.save();
+
+  const populatedMessage = sanitizeMessage(
+    await Message.findById(notification._id).populate('sender', 'name username avatarUrl').lean(),
+  );
+
+  group = await Chat.findById(group._id)
+    .populate('activeMembers', 'name username avatarUrl bio email phone lastSeenAt')
+    .populate({
+      path: 'lastMessage',
+      select: 'sender type text attachments createdAt',
+      populate: {
+        path: 'sender',
+        select: 'name username',
+      },
+    })
+    .lean();
+  group.messages = [populatedMessage];
+
+  // notify to all other members using socket
+  const io = req.app.get('io');
+  const chatUpdatedPayload = {
+    id: group._id.toString(),
+    type: group.type,
+    name: group.name,
+    avatarUrl: group.avatarUrl,
+    lastMessage: populatedMessage,
+    lastMessageAt: populatedMessage.createdAt,
+    unreadCount: 1,
+  };
+
+  group.activeMembers.forEach((mem) => {
+    if (mem._id.toString() === req.user._id.toString()) return;
+    io.to(`user:${mem._id.toString()}`).emit(CHAT_EVENTS.UPDATED, chatUpdatedPayload);
+  });
+
+  return res.status(201).json(
+    new ApiResponse(
+      201,
+      {
+        group: sanitizeChat(group),
+      },
+      'Group created successfully',
     ),
   );
 });
