@@ -200,7 +200,12 @@ export const getCookie = (cookies, cookieName = '') => {
   return null;
 };
 
-// todo add js docs
+/**
+ * Capitalizes the first letter of each space-delimited word and lowercases the rest.
+ *
+ * @param {string} str - String to convert to title-style capitalization.
+ * @returns {string} String with each word capitalized.
+ */
 export const capitalizeWords = (str) => {
   return str
     .split(' ')

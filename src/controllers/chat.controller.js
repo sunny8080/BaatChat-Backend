@@ -10,7 +10,7 @@ import ApiError from '../utils/ApiError.js';
 import { isValidObjectId } from 'mongoose';
 import User from '../models/user.model.js';
 import { uploadToCloudinary } from '../config/cloudnaryConnect.js';
-import { CHAT_EVENTS } from '../socket/socketEvents.js';
+import { CHAT_EVENTS, GROUP_EVENTS } from '../socket/socketEvents.js';
 
 /**
  * Fetches all chats for the authenticated user, including unread counts,
@@ -163,7 +163,19 @@ export const getChatDetails = asyncHandler(async (req, res) => {
   );
 });
 
-// todo add js docs
+/**
+ * Create a new group chat for the authenticated user.
+ *
+ * Expects multipart form data with a required group avatar file, a group name,
+ * and members provided as an array, JSON string, or comma-separated user ids.
+ * Members must be friends of the authenticated user.
+ *
+ * @route POST /api/v1/chats/groups
+ * @access Private
+ * @param {import('express').Request} req - Express request with authenticated user, body, file, and app socket instance.
+ * @param {import('express').Response} res - Express response.
+ * @returns {Promise<import('express').Response>} Created group chat response.
+ */
 export const createGroup = asyncHandler(async (req, res) => {
   const name = req.body?.name?.trim();
   const description = req.body?.description?.trim() ?? '';
@@ -314,6 +326,120 @@ export const createGroup = asyncHandler(async (req, res) => {
         group: sanitizeChat(group),
       },
       'Group created successfully',
+    ),
+  );
+});
+
+/**
+ * Updates an existing group chat's details for an active member, optionally
+ * uploading a new avatar and notifying group members through sockets.
+ *
+ * @route PATCH /api/v1/chats/group
+ * @param {import('express').Request & { body: { chatId?: string, name?: string, description?: string }, file?: Express.Multer.File, user: { _id: mongoose.Types.ObjectId, name: string } }} req Express request with group update fields and authenticated user.
+ * @param {import('express').Response} res Express response.
+ * @returns {Promise<void>} Sends the updated group id in the response body.
+ */
+export const updateGroupDetails = asyncHandler(async (req, res) => {
+  const chatId = req.body?.chatId?.trim();
+  const name = req.body?.name?.trim();
+  const description = req.body?.description?.trim();
+
+  if (!chatId) {
+    throw new ApiError(400, 'Group id is required');
+  }
+
+  if (!isValidObjectId(chatId)) {
+    throw new ApiError(400, 'Invalid group id');
+  }
+
+  if (!(name || description !== undefined || req.file)) {
+    throw new ApiError(400, 'Update fields are missing');
+  }
+
+  if (name && name.length < 2) {
+    throw new ApiError(400, 'Group name is required');
+  }
+
+  const updateFields = {
+    ...(name && { name }),
+    ...(description !== undefined && { description }),
+  };
+
+  if (req.file) {
+    if (req.file.size > process.env.AVATAR_MAX_SIZE_B) {
+      throw new ApiError(
+        400,
+        `Please upload a image less than ${process.env.AVATAR_MAX_SIZE_B / 1024} KB`,
+      );
+    }
+
+    const img = await uploadToCloudinary({
+      file: req.file,
+      fileName: `grp_${req.user._id.toString()}_${Date.now()}`,
+      folder: process.env.AVATAR_FOLDER_NAME,
+      quality: 75,
+    });
+
+    updateFields.avatarUrl = img.secure_url;
+  }
+
+  const group = await Chat.findOneAndUpdate(
+    {
+      _id: chatId,
+      type: ChatType.GROUP,
+      activeMembers: req.user._id,
+    },
+    { $set: updateFields },
+    { returnDocument: 'after', runValidators: true },
+  );
+
+  if (!group) {
+    throw new ApiError(404, 'Group not found or you are not allowed to update it');
+  }
+
+  const updateFieldsText = Object.keys(updateFields)
+    .map((key) => (key === 'avatarUrl' ? 'avatar' : key))
+    .join(', ');
+
+  // create notification
+  const notification = await Message.create({
+    chat: group._id,
+    sender: req.user._id.toString(),
+    type: messageType.NOTIFICATION,
+    text: `${capitalizeWords(req.user.name)} updated this group ${updateFieldsText}`,
+  });
+
+  group.lastMessage = notification._id;
+  group.lastMessageAt = notification.createdAt;
+  await group.save();
+
+  const populatedMessage = sanitizeMessage(
+    await Message.findById(notification._id).populate('sender', 'name username avatarUrl').lean(),
+  );
+
+  const groupUpdatedPayload = {
+    id: group._id.toString(),
+    type: group.type,
+    name: group.name,
+    description: group.description,
+    avatarUrl: group.avatarUrl,
+    lastMessage: populatedMessage,
+    lastMessageAt: populatedMessage.createdAt,
+  };
+
+  // notify others
+  const io = req.app.get('io');
+  group.activeMembers.forEach((mem) => {
+    io.to(`user:${mem._id.toString()}`).emit(GROUP_EVENTS.UPDATED, groupUpdatedPayload);
+  });
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        groupId: group._id.toString(),
+      },
+      'Group details updated successfully',
     ),
   );
 });
