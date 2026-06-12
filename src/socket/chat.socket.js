@@ -3,7 +3,7 @@ import Chat from '../models/chat.model.js';
 import Message from '../models/message.model.js';
 import User from '../models/user.model.js';
 import ApiError from '../utils/ApiError.js';
-import { sanitizeMessage, sanitizeUser } from '../utils/utils.js';
+import { sanitizeChat, sanitizeMessage, sanitizeUser } from '../utils/utils.js';
 import { onlineUsers } from './onlineUsers.js';
 import { CHAT_EVENTS, MESSAGE_EVENTS, TYPING_EVENTS } from './socketEvents.js';
 
@@ -22,6 +22,7 @@ export const registerChatListeners = (io, socket) => {
     text = text?.trim();
     receiverId = receiverId?.trim();
     const senderId = socket.user.id;
+    let newChatCreated = false;
 
     try {
       if (!chatId && !receiverId) {
@@ -68,6 +69,7 @@ export const registerChatListeners = (io, socket) => {
           });
         }
         chatId = chat.id;
+        newChatCreated = true;
 
         // join current chat room
         socket.join(`chat:${chatId}`);
@@ -135,9 +137,43 @@ export const registerChatListeners = (io, socket) => {
       // receiver may have open this chat, so emit event to all users in that room
       socket.to(`chat:${chatId}`).emit(MESSAGE_EVENTS.RECEIVED, populatedMessage);
 
-      // if acknowledgement function is sent then call that function
+      const ackData = {
+        ok: true,
+        message: populatedMessage,
+      };
+
+      if (newChatCreated) {
+        // send new chat details
+        const newChat = await Chat.findById(chatId)
+          .sort({ lastMessageAt: -1, updatedAt: -1 })
+          .populate('activeMembers', 'name username avatarUrl lastSeenAt bio email phone username')
+          .populate({
+            path: 'lastMessage',
+            select: 'sender type text attachments createdAt',
+            populate: {
+              path: 'sender',
+              select: 'name username',
+            },
+          })
+          .lean();
+        newChat.activeMembers.forEach((mem) => {
+          mem.isOnline = onlineUsers.isOnline(mem._id.toString());
+        });
+        let friend =
+          newChat.activeMembers[0]._id.toString() === senderId.toString()
+            ? newChat.activeMembers[1]
+            : newChat.activeMembers[0];
+
+        newChat.friend = sanitizeUser(friend);
+        newChat.name = friend.name;
+        newChat.avatarUrl = friend.avatarUrl;
+
+        ackData.newChat = sanitizeChat(newChat);
+      }
+
       if (typeof ack === 'function') {
-        ack({ ok: true, message: populatedMessage });
+        // if acknowledgement function is sent then call that function
+        ack(ackData);
       }
     } catch (error) {
       console.log(error);
