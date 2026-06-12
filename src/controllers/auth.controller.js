@@ -206,7 +206,7 @@ export const loginUser = asyncHandler(async (req, res, next) => {
   if (user.loginType !== UserLoginTypes.EMAIL_PASSWORD) {
     throw new ApiError(
       400,
-      `You have registered using ${user.loginType?.toLowerCase()}. Please use the ${user.loginType?.toLowerCase()} login option to access your account.`,
+      `You have registered using ${user.loginType?.toLowerCase()}. Please use same login method.`,
     );
   }
 
