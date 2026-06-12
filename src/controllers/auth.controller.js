@@ -5,8 +5,18 @@ import ApiError from '../utils/ApiError.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import OTPMail from '../mails/OTPMail.js';
-import { mailSender, generateOTP, hashOTP, generateAccessAndRefreshTokens, generateTempToken, hashTempToken, sanitizeUser } from '../utils/utils.js';
+import {
+  mailSender,
+  generateOTP,
+  hashOTP,
+  generateAccessAndRefreshTokens,
+  generateTempToken,
+  hashTempToken,
+  sanitizeUser,
+} from '../utils/utils.js';
 import ForgotPasswordMail from '../mails/ForgotPasswordMail.js';
+import { OAuth2Client } from 'google-auth-library';
+import { uploadToCloudinaryFromUrl } from '../config/cloudnaryConnect.js';
 
 /**
  * Register a new user and send a signup OTP to their email.
@@ -84,7 +94,9 @@ export const registerUser = asyncHandler(async (req, res, next) => {
     throw new ApiError(500, 'Something went wrong while registering the user!');
   }
 
-  return res.status(201).json(new ApiResponse(201, { email }, 'Signup OTP sent successfully on your email.'));
+  return res
+    .status(201)
+    .json(new ApiResponse(201, { email }, 'Signup OTP sent successfully on your email.'));
 });
 
 /**
@@ -116,7 +128,9 @@ export const verifyEmail = asyncHandler(async (req, res, next) => {
     throw new ApiError(409, 'User with this email already exists');
   }
 
-  const isOtpValid = user.emailVerificationOTP === hashOTP(email, otp) && user.emailVerificationOTPExpiry?.getTime() > Date.now();
+  const isOtpValid =
+    user.emailVerificationOTP === hashOTP(email, otp) &&
+    user.emailVerificationOTPExpiry?.getTime() > Date.now();
 
   if (!isOtpValid) {
     throw new ApiError(400, 'Invalid or expired OTP');
@@ -130,7 +144,9 @@ export const verifyEmail = asyncHandler(async (req, res, next) => {
   await user.save({ validateBeforeSave: false });
 
   // generate access token and refresh token and send it in http cookie as httpOnly
-  const { accessToken, refreshToken, cookieOptions } = await generateAccessAndRefreshTokens(user._id);
+  const { accessToken, refreshToken, cookieOptions } = await generateAccessAndRefreshTokens(
+    user._id,
+  );
 
   let createdUser = await User.findById(user._id);
 
@@ -177,7 +193,9 @@ export const loginUser = asyncHandler(async (req, res, next) => {
     throw new ApiError(400, 'Password is required!');
   }
 
-  const loginCred = emailOrUsername.includes('@') ? { email: emailOrUsername } : { username: emailOrUsername };
+  const loginCred = emailOrUsername.includes('@')
+    ? { email: emailOrUsername }
+    : { username: emailOrUsername };
   let user = await User.findOne(loginCred).select('+password');
 
   if (!user) {
@@ -186,14 +204,19 @@ export const loginUser = asyncHandler(async (req, res, next) => {
 
   // check if user has used another method for signed up
   if (user.loginType !== UserLoginTypes.EMAIL_PASSWORD) {
-    throw new ApiError(400, `You have registered using ${user.loginType?.toLowerCase()}. Please use the ${user.loginType?.toLowerCase()} login option to access your account.`);
+    throw new ApiError(
+      400,
+      `You have registered using ${user.loginType?.toLowerCase()}. Please use the ${user.loginType?.toLowerCase()} login option to access your account.`,
+    );
   }
 
   if (!(await user.isPasswordCorrect(password))) {
     throw new ApiError(401, 'Invalid email or password!');
   }
 
-  const { accessToken, refreshToken, cookieOptions } = await generateAccessAndRefreshTokens(user._id);
+  const { accessToken, refreshToken, cookieOptions } = await generateAccessAndRefreshTokens(
+    user._id,
+  );
 
   user = await User.findById(user._id);
 
@@ -209,7 +232,7 @@ export const loginUser = asyncHandler(async (req, res, next) => {
           accessToken,
           refreshToken,
         },
-        'User logged up successfully',
+        'User logged in successfully',
       ),
     );
 });
@@ -273,7 +296,9 @@ export const getAccessToken = asyncHandler(async (req, res) => {
     throw new ApiError(401, 'Refresh token is expired or used');
   }
 
-  const { accessToken, refreshToken, cookieOptions } = await generateAccessAndRefreshTokens(user._id);
+  const { accessToken, refreshToken, cookieOptions } = await generateAccessAndRefreshTokens(
+    user._id,
+  );
 
   // update user's refresh token
   user.refreshToken = refreshToken;
@@ -283,7 +308,9 @@ export const getAccessToken = asyncHandler(async (req, res) => {
     .status(200)
     .cookie('accessToken', accessToken, cookieOptions)
     .cookie('refreshToken', refreshToken, cookieOptions)
-    .json(new ApiResponse(200, { accessToken, refreshToken }, 'Access token refreshed successfully'));
+    .json(
+      new ApiResponse(200, { accessToken, refreshToken }, 'Access token refreshed successfully'),
+    );
 });
 
 /**
@@ -316,7 +343,9 @@ export const resendVerificationOTP = asyncHandler(async (req, res) => {
   user.emailVerificationOTPExpiry = new Date(Date.now() + parseInt(process.env.OTP_EXPIRY_MS));
   await user.save();
 
-  return res.status(200).json(new ApiResponse(200, { email }, 'Signup OTP sent successfully on your email.'));
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { email }, 'Signup OTP sent successfully on your email.'));
 });
 
 /**
@@ -341,7 +370,10 @@ export const forgotPassword = asyncHandler(async (req, res) => {
   }
 
   if (user.loginType !== UserLoginTypes.EMAIL_PASSWORD) {
-    throw new ApiError(400, `You have registered using ${user.loginType?.toLowerCase()}. Please use the ${user.loginType?.toLowerCase()} login option to access your account.`);
+    throw new ApiError(
+      400,
+      `You have registered using ${user.loginType?.toLowerCase()}. Please use the ${user.loginType?.toLowerCase()} login option to access your account.`,
+    );
   }
 
   if (!user.isEmailVerified) {
@@ -353,14 +385,22 @@ export const forgotPassword = asyncHandler(async (req, res) => {
   const resetURL = `${process.env.FED_URL}/reset-password/${resetToken}?te=${Date.now() + parseInt(process.env.USER_TEMPORARY_TOKEN_EXPIRY)}`; // te is token creation time, used by FED
 
   user.forgotPasswordToken = hashedResetToken;
-  user.forgotPasswordExpiry = new Date(Date.now() + parseInt(process.env.USER_TEMPORARY_TOKEN_EXPIRY));
+  user.forgotPasswordExpiry = new Date(
+    Date.now() + parseInt(process.env.USER_TEMPORARY_TOKEN_EXPIRY),
+  );
   await user.save({ validateBeforeSave: false });
 
   // send reset link email
-  const { html, text } = ForgotPasswordMail(user.name, resetURL, parseInt(process.env.OTP_EXPIRY_MS / (60 * 1000)));
+  const { html, text } = ForgotPasswordMail(
+    user.name,
+    resetURL,
+    parseInt(process.env.OTP_EXPIRY_MS / (60 * 1000)),
+  );
   await mailSender(email, 'Reset your BaatChat password 🔑', html, text);
 
-  return res.status(200).json(new ApiResponse(200, {}, 'Password reset link sent successfully on your email.'));
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, 'Password reset link sent successfully on your email.'));
 });
 
 // TODO -need to validate this controller
@@ -433,7 +473,10 @@ export const changePassword = asyncHandler(async (req, res) => {
   }
 
   if (user.loginType !== UserLoginTypes.EMAIL_PASSWORD) {
-    throw new ApiError(400, `You have registered using ${user.loginType?.toLowerCase()}. Password change is not available for this account.`);
+    throw new ApiError(
+      400,
+      `You have registered using ${user.loginType?.toLowerCase()}. Password change is not available for this account.`,
+    );
   }
 
   if (!(await user.isPasswordCorrect(oldPassword))) {
@@ -504,4 +547,255 @@ export const checkUsernameAvailability = asyncHandler(async (req, res) => {
       usernameExists ? 'Username is not available' : 'Username is available',
     ),
   );
+});
+
+// todo add js docs for this controller
+export const googleCallBack = asyncHandler(async (req, res) => {
+  const { code, credential } = req.body;
+
+  // code - google login auth-code flow
+  // credential - google login one tap flow
+  if (!(code || credential)) {
+    throw new ApiError(400, 'Invalid Credentials');
+  }
+
+  /**
+   * Cases -
+   * 1. user exists (check email) -
+   * 1A -> having different login method
+   * 1B -> having login method as Google, but google id not matching -> rare but can happen
+   * 1B -> having login method as Google, then log in send access token and refresh token
+   *
+   * 2. User doesn't exist -
+   * 2A. since we'll get name, avatar, email from google login, so send them temp token so they can login
+   * but can't access any route. mark this user as un-verified (isEmailVerified = false)
+   * later using provided temp token, and username and phone, create user and send accessToken dn refreshToken for login
+   */
+
+  const client = new OAuth2Client(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    'postmessage',
+  );
+
+  let payload = {};
+  try {
+    let idToken = credential;
+    if (code) {
+      const { tokens } = await client.getToken(code);
+      idToken = tokens.id_token;
+    }
+
+    // verify token using google token verifier
+    const ticket = await client.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    payload = ticket.getPayload();
+
+    if (!payload) {
+      throw new ApiError(400, 'Invalid Google credentials!');
+    }
+
+    if (!payload.email_verified) {
+      throw new ApiError(401, 'Google email is not verified');
+    }
+
+    if (!payload.sub) {
+      throw new ApiError(401, 'Invalid Google account');
+    }
+  } catch (error) {
+    throw new ApiError(400, 'Invalid Google authorization');
+  }
+
+  const googleData = {
+    googleId: payload.sub,
+    email: payload.email,
+    name: payload.name,
+    avatarUrl: payload.picture,
+  };
+
+  // check if user exist
+  const user = await User.findOne({ email: googleData.email, isEmailVerified: true }).select(
+    '+googleId',
+  );
+  if (user) {
+    // 1. user exist
+    if (user.loginType !== UserLoginTypes.GOOGLE) {
+      // 1A
+      throw new ApiError(400, 'User already exists. Please use a different login method.');
+    } else if (user.googleId !== googleData.googleId) {
+      throw new ApiError(400, 'Unable to verify your Google account.');
+      // 1B
+    } else {
+      // 1C
+      const { accessToken, refreshToken, cookieOptions } = await generateAccessAndRefreshTokens(
+        user._id,
+      );
+
+      return res
+        .status(200)
+        .cookie('accessToken', accessToken, cookieOptions)
+        .cookie('refreshToken', refreshToken, cookieOptions)
+        .json(
+          new ApiResponse(
+            200,
+            {
+              user: sanitizeUser(user),
+              accessToken,
+              refreshToken,
+            },
+            'User logged in successfully',
+          ),
+        );
+    }
+
+    return res.status(200).json(new ApiResponse(200, {}, 'User created Successfully'));
+  } else {
+    // case 2 - user doesn't exist, create user but assign temp token, username, phone
+    let tempUsername = googleData.email.split('@')[0] + '_' + Date.now();
+    tempUsername = tempUsername.slice(0, 30);
+    const tempPhone = googleData.googleId.slice(0, 10);
+    const signUpGoogleToken = jwt.sign(
+      {
+        type: 'signup',
+        googleId: googleData.googleId,
+        email: googleData.email,
+      },
+      process.env.ACCESS_TOKEN_SECRET,
+      {
+        expiresIn: process.env.ACCESS_TOKEN_EXPIRY || '15m',
+      },
+    );
+
+    // upload profile picture to own cloudinary
+    const img = await uploadToCloudinaryFromUrl({
+      fileUrl: googleData.avatarUrl,
+      fileName: `av_google_${googleData.googleId}_${Date.now()}`,
+      folder: process.env.AVATAR_FOLDER_NAME,
+      quality: 75,
+      width: 400,
+      height: 400,
+      type: 'image',
+    });
+    const avatarUrl = img.secure_url;
+
+    let createdUser = await User.findOneAndUpdate(
+      { email: googleData.email, isEmailVerified: false },
+      {
+        $set: {
+          name: googleData.name,
+          email: googleData.email,
+          avatarUrl,
+          googleId: googleData.googleId,
+          username: tempUsername,
+          phone: tempPhone,
+          loginType: UserLoginTypes.GOOGLE,
+          isEmailVerified: false,
+        },
+      },
+      {
+        returnDocument: 'after',
+        upsert: true,
+      },
+    );
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          isNewUser: true,
+          signUpGoogleToken,
+          user: {
+            ...googleData,
+            username: tempUsername,
+            loginType: UserLoginTypes.GOOGLE,
+          },
+        },
+        'User created Successfully',
+      ),
+    );
+  }
+});
+
+// todo add js docs for this controller
+export const completeSocialSignup = asyncHandler(async (req, res) => {
+  const username = req.body?.username?.trim();
+  const phone = req.body?.phone?.trim();
+  const email = req.body?.email?.trim();
+  const authHeader = req.headers.authorization;
+  let signUpGoogleToken = '';
+
+  if (authHeader && authHeader.startsWith('Bearer')) {
+    signUpGoogleToken = authHeader?.replace('Bearer ', '');
+  }
+
+  if (!signUpGoogleToken) {
+    throw new ApiError(401, 'Not authorized');
+  }
+
+  if (!(username && phone && email)) {
+    throw new ApiError(400, 'Username and Phone is required');
+  }
+
+  try {
+    const decoded = jwt.verify(signUpGoogleToken, process.env.ACCESS_TOKEN_SECRET);
+
+    const userNameExist = await User.findOne({
+      username,
+      email: { $ne: email },
+    });
+    if (userNameExist) {
+      throw new ApiError(400, 'Username already exists, try other username!');
+    }
+
+    const userExist = await User.findOne({
+      email,
+      isEmailVerified: true,
+    });
+    if (userExist) {
+      throw new ApiError(400, 'User already exists, try to login!');
+    }
+
+    let user = await User.findOneAndUpdate(
+      { email: decoded.email, isEmailVerified: false },
+      {
+        $set: {
+          username,
+          phone,
+          isEmailVerified: true,
+        },
+      },
+      {
+        returnDocument: 'after',
+        upsert: true,
+      },
+    );
+
+    if (!user) {
+      throw new ApiError(404, 'User not found!!');
+    }
+    const { accessToken, refreshToken, cookieOptions } = await generateAccessAndRefreshTokens(
+      user._id,
+    );
+
+    return res
+      .status(200)
+      .cookie('accessToken', accessToken, cookieOptions)
+      .cookie('refreshToken', refreshToken, cookieOptions)
+      .json(
+        new ApiResponse(
+          200,
+          {
+            user: sanitizeUser(user),
+            accessToken,
+            refreshToken,
+          },
+          'User signed up successfully',
+        ),
+      );
+  } catch (error) {
+    throw new ApiError(401, 'Invalid access token or token expired');
+  }
 });

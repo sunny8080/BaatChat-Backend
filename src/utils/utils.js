@@ -122,7 +122,7 @@ export const generateAccessAndRefreshTokens = async (userId) => {
  */
 export const sanitizeUser = (user) => {
   const userObj = user instanceof mongoose.Document ? user.toObject() : user;
-  const { _id, __v, ...rest } = userObj;
+  const { _id, __v, googleId, ...rest } = userObj;
   const sanitizedUser = {
     ...rest,
     id: _id.toString(),

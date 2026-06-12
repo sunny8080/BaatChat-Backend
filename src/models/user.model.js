@@ -20,7 +20,10 @@ const userSchema = new Schema(
       trim: true,
       minLength: [10, 'Phone number must have at least 10 digits'],
       maxLength: [10, 'Phone number must have at most 10 digits'],
-      match: [/^.*\d.*\d.*\d.*\d.*\d.*\d.*\d.*\d.*\d.*\d.*$/, 'Phone number must have at least 10 digits.'],
+      match: [
+        /^.*\d.*\d.*\d.*\d.*\d.*\d.*\d.*\d.*\d.*\d.*$/,
+        'Phone number must have at least 10 digits.',
+      ],
       required: true,
       index: true,
     },
@@ -39,6 +42,15 @@ const userSchema = new Schema(
       unique: true,
       minlength: 3,
       maxlength: 30,
+    },
+    googleId: {
+      type: String,
+      trim: true,
+      unique: true,
+      required() {
+        return this.loginType === UserLoginTypes.GOOGLE;
+      },
+      select: false,
     },
     avatarUrl: {
       type: String,

@@ -56,3 +56,31 @@ export const uploadToCloudinary = ({ file, fileName, folder, width, height, qual
       .end(file.buffer);
   });
 };
+
+// todo add js docs
+export const uploadToCloudinaryFromUrl = async ({
+  fileUrl,
+  fileName,
+  folder,
+  width,
+  height,
+  quality,
+  type,
+}) => {
+  const options = {
+    folder,
+    public_id: fileName,
+    resource_type: 'auto',
+  };
+
+  if (type === 'image') {
+    options.quality = quality || 'auto';
+    options.fetch_format = 'auto';
+    options.crop = 'limit';
+
+    if (width) options.width = width;
+    if (height) options.height = height;
+  }
+
+  return await cloudinary.uploader.upload(fileUrl, options);
+};
