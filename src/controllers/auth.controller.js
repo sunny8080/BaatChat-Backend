@@ -480,7 +480,7 @@ export const changePassword = asyncHandler(async (req, res) => {
   }
 
   if (!(await user.isPasswordCorrect(oldPassword))) {
-    throw new ApiError(401, 'Old password is incorrect');
+    throw new ApiError(401, 'Current password is incorrect');
   }
 
   user.password = newPassword;

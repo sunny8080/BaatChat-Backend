@@ -12,7 +12,7 @@ import { sanitizeUser } from '../utils/utils.js';
 /**
  * Update the authenticated user's profile details.
  *
- * Accepts optional `name`, `bio`, and avatar upload fields. At least one field
+ * Accepts optional `name`, `username`, `phone`, `bio`, and avatar upload fields. At least one field
  * must be provided. Avatar files are validated against `AVATAR_MAX_SIZE_B` and
  * uploaded to Cloudinary before persisting the resulting URL on the user.
  *
@@ -24,18 +24,37 @@ import { sanitizeUser } from '../utils/utils.js';
  * @throws {ApiError} When no update fields are provided, name is invalid, or avatar is too large.
  */
 export const updateUserDetails = asyncHandler(async (req, res) => {
-  let name = req.body?.name;
-  let bio = req.body?.bio;
+  let name = req.body?.name?.toLowerCase();
+  let username = req.body?.username?.trim()?.toLowerCase();
+  let bio = req.body?.bio?.trim();
+  let phone = req.body?.phone?.trim();
   let avBuffer = req.file;
-  name = name?.trim()?.toLowerCase();
-  bio = bio?.trim();
 
-  if (!(name || bio || avBuffer)) {
+  if (!(name || username || phone || bio || avBuffer)) {
     throw new ApiError(400, 'Update fields are missing!');
   }
 
   if (name && name.length < 2) {
     throw new ApiError(400, 'Name is required!');
+  }
+
+  if (username && (username.length < 3 || username.length > 30)) {
+    throw new ApiError(400, 'Username must be between 3 and 30 characters!');
+  }
+
+  if (phone && !/^\d{10}$/.test(phone)) {
+    throw new ApiError(400, 'Phone number must have 10 digits!');
+  }
+
+  if (username) {
+    const usernameExists = await User.exists({
+      username,
+      _id: { $ne: req.user._id },
+    });
+
+    if (usernameExists) {
+      throw new ApiError(400, 'Username already exists, try other username!');
+    }
   }
 
   let avatarUrl = '';
@@ -61,6 +80,8 @@ export const updateUserDetails = asyncHandler(async (req, res) => {
 
   const updateFields = {
     ...(name && { name }),
+    ...(username && { username }),
+    ...(phone && { phone }),
     ...(bio != undefined && { bio }),
     ...(avatarUrl && { avatarUrl }),
   };
