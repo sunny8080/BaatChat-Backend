@@ -42,11 +42,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Mount routers
 import authRouter from './routes/auth.routes.js';
 import chatRouter from './routes/chat.routes.js';
+import messageRouter from './routes/message.routes.js';
 import userRouter from './routes/user.routes.js';
 import { generateUsers } from './seeds/user.seeds.js';
 
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/chats', chatRouter);
+app.use('/api/v1/messages', messageRouter);
 app.use('/api/v1/users', userRouter);
 
 // Mount Seeds Routes

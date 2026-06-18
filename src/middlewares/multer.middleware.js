@@ -16,6 +16,36 @@ export const upload = multer({
 });
 
 /**
+ * Multer middleware for audio uploads that will be uploaded to Cloudinary.
+ *
+ * Files are kept in memory as buffers and only audio MIME types are accepted.
+ */
+export const uploadAudio = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: process.env.AUDIO_UPLOAD_FILE_SIZE,
+  },
+
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = [
+      'audio/mpeg',
+      'audio/mp3',
+      'audio/wav',
+      'audio/webm',
+      'audio/ogg',
+      'audio/aac',
+      'audio/mp4',
+    ];
+
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new ApiError(400, 'Only audio files allowed'), false);
+    }
+  },
+});
+
+/**
  * Multer middleware for image uploads that will be uploaded to Cloudinary.
  *
  * Files are kept in memory as buffers and only image MIME types are accepted.
@@ -44,9 +74,14 @@ const multerDiskStorage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     // filename of file which will be saved in server
-    const fileNameWithoutExtension = file.originalname.toLowerCase().split(' ').join('-')?.split('.')[0];
+    const fileNameWithoutExtension = file.originalname
+      .toLowerCase()
+      .split(' ')
+      .join('-')
+      ?.split('.')[0];
     let fileExtension = extname(file.originalname);
-    const uniqueName = fileNameWithoutExtension + '-' + Date.now() + Math.round(Math.random() * 1e5) + fileExtension;
+    const uniqueName =
+      fileNameWithoutExtension + '-' + Date.now() + Math.round(Math.random() * 1e5) + fileExtension;
     cb(null, uniqueName);
   },
 });
