@@ -77,3 +77,74 @@ export const friendshipStatus = Object.freeze({
   REJECTED: 'rejected',
   BLOCKED: 'blocked',
 });
+
+// todo add js docs
+export const ALLOWED_MIME_TYPES = [
+  // Images
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+
+  // Audio
+  'audio/mpeg', // mp3
+  'audio/mp4', // m4a
+  'audio/wav',
+  'audio/x-wav',
+  'audio/ogg',
+  'audio/webm',
+  'application/json',
+
+  // Video
+  'video/mp4',
+  'video/webm',
+  'video/quicktime', // mov
+
+  // Documents
+  'application/pdf',
+  'text/plain',
+  'text/csv',
+  'text/html',
+
+  // MS Office
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+
+  'application/vnd.ms-powerpoint',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+
+  // Archives
+  'application/zip',
+  'application/x-rar-compressed',
+  'application/x-7z-compressed',
+];
+
+// todo add js docs
+export const BLOCKED_MIME_TYPES = [
+  'image/svg+xml',
+
+  // Windows executables
+  'application/x-msdownload', // exe
+  'application/x-msi', // msi
+
+  // Scripts
+  'application/x-sh', // sh
+  'application/x-bat', // bat
+  'application/x-cmd',
+
+  // PowerShell
+  'application/x-powershell',
+
+  // Java executables
+  'application/java-archive', // jar
+
+  // Android apps
+  'application/vnd.android.package-archive', // apk
+
+  // Apple installers
+  'application/x-apple-diskimage', // dmg
+  'application/vnd.apple.installer+xml', // pkg
+];

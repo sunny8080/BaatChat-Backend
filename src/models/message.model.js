@@ -29,6 +29,10 @@ const attachmentSchema = new Schema(
       required: true,
       trim: true,
     },
+    thumbnailUrl: {
+      type: String,
+      trim: true,
+    },
     fileName: {
       type: String,
       trim: true,

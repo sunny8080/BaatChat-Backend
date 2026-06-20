@@ -1,6 +1,7 @@
 import multer from 'multer';
 import { extname } from 'path';
 import ApiError from '../utils/ApiError.js';
+import { BLOCKED_MIME_TYPES } from '../constant.js';
 
 /**
  * Multer middleware for files that will be uploaded to Cloudinary.
@@ -12,6 +13,18 @@ export const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
     fileSize: process.env.UPLOAD_FILE_SIZE,
+  },
+});
+
+// todo add js docs
+export const uploadFile = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: (req, file, cb) => {
+    if (!BLOCKED_MIME_TYPES.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new ApiError(400, 'Invalid file type'), false);
+    }
   },
 });
 

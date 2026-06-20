@@ -32,8 +32,16 @@ export const uploadToCloudinary = ({ file, fileName, folder, width, height, qual
   const options = {
     folder,
     public_id: fileName,
-    resource_type: 'auto',
   };
+
+  const mimeType = file.mimetype;
+  if (mimeType.startsWith('image/')) {
+    options.resource_type = 'image';
+  } else if (mimeType.startsWith('video/') || mimeType.startsWith('audio/')) {
+    options.resource_type = 'video';
+  } else {
+    options.resource_type = 'raw';
+  }
 
   // Only apply image optimization if it's an image
   if (file.mimetype.startsWith('image/')) {
@@ -45,6 +53,11 @@ export const uploadToCloudinary = ({ file, fileName, folder, width, height, qual
     if (height) options.height = height;
   }
 
+  if (file.mimetype.startsWith('video/')) {
+    options.quality = quality || 'auto'; // auto compress
+    options.fetch_format = 'auto';
+  }
+
   return new Promise((resolve, reject) => {
     cloudinary.uploader
       .upload_stream(options, (error, result) => {
@@ -54,6 +67,15 @@ export const uploadToCloudinary = ({ file, fileName, folder, width, height, qual
         resolve(result);
       })
       .end(file.buffer);
+  });
+};
+
+// todo add js docs
+export const generateThumbnailUrl = (public_id, resource_type) => {
+  return cloudinary.url(public_id, {
+    resource_type,
+    format: 'jpg',
+    start_offset: 1,
   });
 };
 

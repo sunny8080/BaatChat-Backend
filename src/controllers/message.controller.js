@@ -1,5 +1,5 @@
 import { isValidObjectId } from 'mongoose';
-import { uploadToCloudinary } from '../config/cloudnaryConnect.js';
+import { generateThumbnailUrl, uploadToCloudinary } from '../config/cloudnaryConnect.js';
 import { ChatType, messageType } from '../constant.js';
 import Chat from '../models/chat.model.js';
 import Message from '../models/message.model.js';
@@ -144,6 +144,167 @@ export const sendAudioMessage = asyncHandler(async (req, res) => {
   return res
     .status(201)
     .json(new ApiResponse(201, responseData, 'Audio message sent successfully'));
+});
+
+// todo add js docs
+export const sendFile = asyncHandler(async (req, res) => {
+  let chatId = req.body?.chatId?.trim();
+  const text = req.body?.text?.trim() ?? '';
+  const receiverId = req.body?.receiverId?.trim();
+  const duration = req.body?.duration?.trim();
+  const waveform = req.body?.waveform;
+  const fileBlob = req.file;
+  const senderId = req.user._id;
+
+  if (!fileBlob) {
+    throw new ApiError(400, 'File is required');
+  }
+
+  let { chat, newChatCreated } = await getOrCreateChat(chatId, senderId, receiverId, req);
+  if (newChatCreated) {
+    chatId = chat._id.toString();
+  }
+
+  if (!chat) {
+    throw new ApiError(404, 'Chat not found');
+  }
+
+  const mimeType = fileBlob.mimetype;
+  const isImage = mimeType.startsWith('image/');
+  const isAudio = mimeType.startsWith('audio/');
+  const isVideo = mimeType.startsWith('video/');
+  const isFile = !isImage && !isVideo && !isAudio;
+  const fileType = isImage
+    ? messageType.IMAGE
+    : isAudio
+      ? messageType.AUDIO
+      : isVideo
+        ? messageType.VIDEO
+        : messageType.FILE;
+
+  if (isVideo && fileBlob.size > process.env.VIDEO_UPLOAD_FILE_SIZE) {
+    throw new ApiError(400, 'Video size must be less than 20 MB');
+  } else if (!isVideo && fileBlob.size > process.env.UPLOAD_FILE_SIZE) {
+    throw new ApiError(400, 'File size must be less than 8 MB');
+  }
+
+  // audio file must have duration and waveform
+  if (isAudio && (!duration || !waveform)) {
+    throw new ApiError(404, 'Audio file details are missing!');
+  }
+
+  const uploadedFile = await uploadToCloudinary({
+    file: fileBlob,
+    fileName: `file_${senderId.toString()}_${Date.now()}`,
+    folder: process.env.FILE_MESSAGE_FOLDER_NAME,
+    quality: 20,
+  });
+
+  let thumbnailUrl = '';
+  if (isVideo) {
+    thumbnailUrl = generateThumbnailUrl(uploadedFile.public_id, uploadedFile.resource_type);
+  }
+
+  const message = await Message.create({
+    chat: chat._id,
+    sender: senderId,
+    type: fileType,
+    text: text,
+    attachments: [
+      {
+        url: uploadedFile.secure_url,
+        thumbnailUrl,
+        fileName: fileBlob.originalname,
+        mimeType: fileBlob.mimetype || '',
+        size: fileBlob.size,
+        ...(isAudio || isVideo ? { duration } : {}),
+        ...(isAudio ? { waveform: parseWaveform(waveform) } : {}),
+      },
+    ],
+  });
+
+  chat.lastMessage = message._id;
+  chat.lastMessageAt = message.createdAt;
+
+  const populatedMessage = sanitizeMessage(
+    await Message.findById(message._id).populate('sender', 'name username avatarUrl').lean(),
+  );
+
+  const chatUpdatedEvents = [];
+  chat.activeMembers.forEach((memberId) => {
+    const memberIdStr = memberId.toString();
+
+    if (memberIdStr === senderId.toString()) {
+      chat.unreadCounts.set(memberIdStr, 0);
+      return;
+    }
+
+    const unreadCount = (chat.unreadCounts?.get(memberIdStr) || 0) + 1;
+    chat.unreadCounts.set(memberIdStr, unreadCount);
+
+    const chatUpdatedPayload = {
+      id: chat.id,
+      type: chat.type,
+      name: chat.name,
+      avatarUrl: chat.avatarUrl,
+      lastMessage: populatedMessage,
+      lastMessageAt: populatedMessage.createdAt,
+      unreadCount,
+    };
+
+    if (chat.type === ChatType.PERSONAL) {
+      chatUpdatedPayload.name = req.user.name;
+      chatUpdatedPayload.avatarUrl = req.user.avatarUrl;
+      chatUpdatedPayload.isOnline = onlineUsers.isOnline(senderId.toString());
+      chatUpdatedPayload.lastSeenAt = req.user.lastSeenAt;
+    }
+
+    chatUpdatedEvents.push({ memberId: memberIdStr, chatUpdatedPayload });
+  });
+
+  await chat.save();
+
+  const io = req.app.get('io');
+  chatUpdatedEvents.forEach(({ memberId, chatUpdatedPayload }) => {
+    io.to(`user:${memberId}`).emit(CHAT_EVENTS.UPDATED, chatUpdatedPayload);
+  });
+  io.to(`chat:${chatId}`)
+    .except(`user:${senderId.toString()}`)
+    .emit(MESSAGE_EVENTS.RECEIVED, populatedMessage);
+
+  const responseData = { message: populatedMessage };
+
+  if (newChatCreated) {
+    // send new chat details
+    const newChat = await Chat.findById(chatId)
+      .sort({ lastMessageAt: -1, updatedAt: -1 })
+      .populate('activeMembers', 'name username avatarUrl lastSeenAt bio email phone username')
+      .populate({
+        path: 'lastMessage',
+        select: 'sender type text attachments createdAt',
+        populate: {
+          path: 'sender',
+          select: 'name username',
+        },
+      })
+      .lean();
+
+    newChat.activeMembers.forEach((mem) => {
+      mem.isOnline = onlineUsers.isOnline(mem._id.toString());
+    });
+    let friend =
+      newChat.activeMembers[0]._id.toString() === senderId.toString()
+        ? newChat.activeMembers[1]
+        : newChat.activeMembers[0];
+
+    newChat.friend = sanitizeUser(friend);
+    newChat.name = friend.name;
+    newChat.avatarUrl = friend.avatarUrl;
+
+    responseData.newChat = sanitizeChat(newChat);
+  }
+
+  return res.status(201).json(new ApiResponse(201, responseData, 'File sent successfully'));
 });
 
 // todo add js docs
