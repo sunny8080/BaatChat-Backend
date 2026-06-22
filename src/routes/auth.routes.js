@@ -15,12 +15,13 @@ import {
   completeSocialSignup,
 } from '../controllers/auth.controller.js';
 import { authenticateUser } from '../middlewares/auth.middleware.js';
+import { loginLimiter, userLimiter } from '../middlewares/limiter.middleware.js';
 
 const router = Router();
 
 router.route('/register-user').post(registerUser);
 router.route('/verify-email').post(verifyEmail);
-router.route('/login').post(loginUser);
+router.route('/login').post(loginLimiter, loginUser);
 router.route('/logout').get(authenticateUser, logoutUser);
 router.route('/get-access-token').get(getAccessToken);
 router.route('/resend-verification-otp').post(resendVerificationOTP);

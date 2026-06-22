@@ -9,6 +9,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import notFoundMiddleware from './middlewares/notFound.middleware.js';
 import { initializeSocketIO } from './socket/socket.js';
+import { limiter } from './middlewares/limiter.middleware.js';
 
 export const __filename = fileURLToPath(import.meta.url);
 export const __dirname = path.dirname(__filename);
@@ -33,6 +34,13 @@ app.use(
     credentials: true,
   }),
 );
+
+// set correct proxy on request
+app.set('trust proxy', true);
+
+// apply this rate limiter globally to all req
+app.use(limiter);
+
 app.use(cookieParser());
 app.use(morganLogger);
 app.use(express.json({ limit: '10kb' }));
