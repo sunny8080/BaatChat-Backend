@@ -71,7 +71,7 @@ export const mailSender = async (toEmail, subject, html, text) => {
   });
 
   const mailOptions = {
-    from: `"BaatChat" <${process.env.ADMIN_EMAIL}>`,
+    from: `"BaatChat" <${process.env.SITE_EMAIL}>`,
     to: toEmail,
     subject: subject,
     html,
