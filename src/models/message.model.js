@@ -120,11 +120,6 @@ const messageSchema = new Schema(
       },
     ],
     editedAt: Date,
-    deletedForEveryone: {
-      type: Boolean,
-      default: false,
-      select: false,
-    },
     deletedBy: {
       type: [
         {

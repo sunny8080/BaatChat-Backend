@@ -70,6 +70,8 @@ const chatSchema = new Schema(
       ],
       select: false,
     },
+    // TODO - since for every member last message can be different, so we can't trust on this
+    // in future we'll be removing all of its' use and replica
     lastMessage: {
       type: Schema.Types.ObjectId,
       ref: 'Message',

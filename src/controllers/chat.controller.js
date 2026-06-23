@@ -28,18 +28,32 @@ export const getCurrentUserChats = asyncHandler(async (req, res) => {
     .select('-admins -createdBy -createdAt -updatedAt"')
     .sort({ lastMessageAt: -1, updatedAt: -1 })
     .populate('activeMembers', 'name username avatarUrl')
-    .populate({
-      path: 'lastMessage',
-      select: 'sender type text attachments createdAt',
-      populate: {
-        path: 'sender',
-        select: 'name username',
-      },
-    })
     .lean();
+
+  const lastMessages = chats.length
+    ? (
+        await Promise.all(
+          chats.map((chat) =>
+            Message.findOne({
+              chat: chat._id,
+              deletedBy: { $ne: userId },
+            })
+              .select('sender type text attachments createdAt chat')
+              .sort({ createdAt: -1, _id: -1 })
+              .populate('sender', 'name username')
+              .lean(),
+          ),
+        )
+      ).filter(Boolean)
+    : [];
+
+  const lastMessageByChatId = new Map(
+    lastMessages.map((message) => [message.chat.toString(), message]),
+  );
 
   chats = chats.map((chat) => {
     chat.unreadCount = chat.unreadCounts?.[userId] || 0;
+    chat.lastMessage = lastMessageByChatId.get(chat._id.toString()) || undefined;
 
     if (chat.type === ChatType.PERSONAL) {
       // update name chat details in case of personal chat
@@ -125,6 +139,7 @@ export const getChatDetails = asyncHandler(async (req, res) => {
   // if message are in count of limit then it may happen that more message are there
   // send next cursor as last message, which will be used later for pagination
   nextCursor = messages.length == 30 ? messages.at(-1)._id.toString() : '';
+  chatData.lastMessage = messages.length ? messages[0] : undefined;
 
   if (messages.length) {
     messages.reverse();

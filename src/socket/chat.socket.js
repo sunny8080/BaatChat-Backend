@@ -1,4 +1,4 @@
-import { ChatType, messageType } from '../constant.js';
+import { ChatType, DELETE_FOR_EVERYONE_WINDOW, messageType } from '../constant.js';
 import Chat from '../models/chat.model.js';
 import Message from '../models/message.model.js';
 import User from '../models/user.model.js';
@@ -357,5 +357,115 @@ export const registerChatListeners = (io, socket) => {
         avatarUrl: currentUser.avatarUrl,
       },
     });
+  });
+
+  socket.on(MESSAGE_EVENTS.DELETE, async (payload = {}, ack) => {
+    let { chatId, msgId, forEveryone = false } = payload;
+    chatId = chatId?.trim();
+    msgId = msgId?.trim();
+    const currentUser = socket.user;
+    const currentUserId = currentUser._id.toString();
+
+    try {
+      if (!chatId || !msgId) {
+        throw new Error('Chat id or message id is missing');
+      }
+
+      const chat = await Chat.findOne({
+        _id: chatId,
+        activeMembers: currentUserId,
+      });
+
+      if (!chat) {
+        throw new Error('Unauthorized');
+      }
+
+      const message = await Message.findOne({
+        _id: msgId,
+        chat: chatId,
+      }).select('+deletedBy');
+
+      if (!message) {
+        throw new Error('Message not found');
+      }
+
+      if (!forEveryone) {
+        if (!message.deletedBy.some((userId) => userId.toString() === currentUserId)) {
+          message.deletedBy.push(currentUserId);
+          await message.save({ validateBeforeSave: false });
+        }
+      } else {
+        // delete this message for everyone
+        if (message.sender.toString() !== currentUserId) {
+          throw new Error('Only sender can delete message for everyone');
+        }
+        if (Date.now() > message.createdAt.getTime() + DELETE_FOR_EVERYONE_WINDOW) {
+          throw new Error('Delete for everyone window has expired');
+        }
+        await message.deleteOne();
+
+        // notify each member about their last message and unread count
+        const chatUpdatedEvents = [];
+        const activeMemberIds = chat.activeMembers.map((memberId) => memberId.toString());
+        const seenByIds = new Set(message.seenBy.map(({ user }) => user.toString()));
+        const senderId = message.sender.toString();
+
+        const lastMessages = (
+          await Promise.all(
+            activeMemberIds.map(async (memberId) => {
+              const lastMessage = await Message.findOne({
+                chat: chat._id,
+                deletedBy: { $ne: memberId },
+              })
+                .sort({ createdAt: -1, _id: -1 })
+                .populate('sender', 'name username avatarUrl')
+                .lean();
+
+              return lastMessage ? { ...lastMessage, visibleTo: memberId } : null;
+            }),
+          )
+        ).filter(Boolean);
+
+        const lastMessageByMemberId = new Map(
+          lastMessages.map((msg) => [msg.visibleTo.toString(), sanitizeMessage(msg)]),
+        );
+
+        activeMemberIds.forEach((memberId) => {
+          if (memberId !== senderId && !seenByIds.has(memberId)) {
+            const unreadCount = Math.max((chat.unreadCounts?.get(memberId) || 0) - 1, 0);
+            chat.unreadCounts.set(memberId, unreadCount);
+          }
+
+          const lastMessage = lastMessageByMemberId.get(memberId) || undefined;
+          const chatUpdatedPayload = {
+            id: chat.id,
+            lastMessage,
+            lastMessageAt: lastMessage?.createdAt,
+            unreadCount: chat.unreadCounts?.get(memberId) || 0,
+          };
+
+          chatUpdatedEvents.push({ memberId, chatUpdatedPayload });
+        });
+
+        await chat.save();
+
+        chatUpdatedEvents.forEach(({ memberId, chatUpdatedPayload }) => {
+          io.to(`user:${memberId}`).emit(CHAT_EVENTS.UPDATED, chatUpdatedPayload);
+        });
+        socket.to(`chat:${chatId}`).emit(MESSAGE_EVENTS.DELETED, { chatId, msgId });
+      }
+
+      const deletedPayload = { chatId, msgId };
+      if (typeof ack === 'function') {
+        ack({ ok: true, ...deletedPayload });
+      }
+    } catch (error) {
+      console.log(error);
+      if (typeof ack === 'function') {
+        ack({ ok: false, error: error.message });
+      } else {
+        socket.emit(MESSAGE_EVENTS.ERROR, { error: error.message });
+      }
+    }
   });
 };
