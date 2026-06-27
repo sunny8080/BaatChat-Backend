@@ -10,7 +10,7 @@ import ApiError from '../utils/ApiError.js';
 import { isValidObjectId } from 'mongoose';
 import User from '../models/user.model.js';
 import { uploadToCloudinary } from '../config/cloudnaryConnect.js';
-import { CHAT_EVENTS, GROUP_EVENTS } from '../socket/socketEvents.js';
+import { CHAT_EVENTS, GROUP_EVENTS, MESSAGE_EVENTS } from '../socket/socketEvents.js';
 
 /**
  * Fetches all chats for the authenticated user, including unread counts,
@@ -24,51 +24,52 @@ import { CHAT_EVENTS, GROUP_EVENTS } from '../socket/socketEvents.js';
 export const getCurrentUserChats = asyncHandler(async (req, res) => {
   const userId = req.user._id;
 
-  let chats = await Chat.find({ members: userId, deletedBy: { $ne: userId } })
-    .select('-admins -createdBy -createdAt -updatedAt"')
+  let chats = await Chat.find({ 'members.user': userId })
+    .select('+members -admins -createdBy -createdAt -updatedAt')
     .sort({ lastMessageAt: -1, updatedAt: -1 })
     .populate('activeMembers', 'name username avatarUrl')
-    .lean();
+    .exec();
 
-  const lastMessages = chats.length
-    ? (
-        await Promise.all(
-          chats.map((chat) =>
-            Message.findOne({
-              chat: chat._id,
-              deletedBy: { $ne: userId },
-            })
-              .select('sender type text attachments createdAt chat')
-              .sort({ createdAt: -1, _id: -1 })
-              .populate('sender', 'name username')
-              .lean(),
-          ),
-        )
-      ).filter(Boolean)
-    : [];
+  chats = (
+    await Promise.all(
+      chats.map(async (chat) => {
+        const latestMembership = chat.getLatestMembershipForUser(userId);
+        const visibleMessageQuery = chat.buildVisibleMessageQueryForMembership(
+          userId,
+          latestMembership,
+          { chat: chat._id },
+        );
+        if (!visibleMessageQuery) return null; // when membership don't have joinedAt
 
-  const lastMessageByChatId = new Map(
-    lastMessages.map((message) => [message.chat.toString(), message]),
-  );
+        const lastMessage = await Message.findOne(visibleMessageQuery)
+          .select('sender type text attachments createdAt chat')
+          .sort({ createdAt: -1, _id: -1 })
+          .populate('sender', 'name username')
+          .lean();
 
-  chats = chats.map((chat) => {
-    chat.unreadCount = chat.unreadCounts?.[userId] || 0;
-    chat.lastMessage = lastMessageByChatId.get(chat._id.toString()) || undefined;
+        // when chat is deleted, there will be no last message and latest membership will have deletedAt
+        if (!lastMessage && latestMembership?.deletedAt) return null;
 
-    if (chat.type === ChatType.PERSONAL) {
-      // update name chat details in case of personal chat
-      let friend =
-        chat.activeMembers[0]._id.toString() === userId.toString()
-          ? chat.activeMembers[1]
-          : chat.activeMembers[0];
+        const chatData = chat.toObject();
+        const userIdStr = userId.toString();
+        chatData.unreadCount = chat.unreadCounts?.get(userIdStr) || 0;
+        chatData.lastMessage = lastMessage || undefined;
 
-      chat.isOnline = onlineUsers.isOnline(friend._id.toString());
-      chat.lastSeenAt = friend.lastSeenAt;
-      chat.name = friend.name;
-      chat.avatarUrl = friend.avatarUrl;
-    }
-    return sanitizeChat(chat);
-  });
+        if (chatData.type === ChatType.PERSONAL) {
+          let friend = chatData.activeMembers.filter((mem) => mem._id.toString() !== userIdStr)[0];
+          if (friend) {
+            // update name chat details in case of personal chat
+            chatData.isOnline = onlineUsers.isOnline(friend._id.toString());
+            chatData.lastSeenAt = friend.lastSeenAt;
+            chatData.name = friend.name;
+            chatData.avatarUrl = friend.avatarUrl;
+          }
+        }
+
+        return sanitizeChat(chatData);
+      }),
+    )
+  ).filter(Boolean);
 
   return res.status(200).json(
     new ApiResponse(
@@ -99,30 +100,22 @@ export const getChatDetails = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Chat id is required');
   }
 
-  const chat = await Chat.findById(chatId)
-    .sort({ lastMessageAt: -1, updatedAt: -1 })
-    .populate('activeMembers', 'name username avatarUrl lastSeenAt bio email phone username')
-    .populate({
-      path: 'lastMessage',
-      select: 'sender type text attachments createdAt',
-      populate: {
-        path: 'sender',
-        select: 'name username',
-      },
-    });
+  const chat = await Chat.findOne({ _id: chatId, 'members.user': userId })
+    .select('+members')
+    .populate('activeMembers', 'name username avatarUrl lastSeenAt bio email phone username');
 
   if (!chat) {
     throw new ApiError(400, 'Chat not found');
   }
 
-  chat.unreadCounts.set(userId, 0);
+  const msgQuery = chat.buildVisibleMessageQuery(userId, { chat: chatId });
+  if (!msgQuery) {
+    throw new ApiError(403, 'You are not allowed to view this chat');
+  }
+
+  chat.unreadCounts.set(userId.toString(), 0);
   await chat.save({ validateBeforeSave: false });
   const chatData = { ...chat.toObject(), unreadCount: 0 };
-
-  const msgQuery = {
-    chat: chatId,
-    deletedBy: { $ne: userId },
-  };
 
   if (nextCursor) {
     // to find previous messages, id are sorted in mongodb,
@@ -279,7 +272,7 @@ export const createGroup = asyncHandler(async (req, res) => {
     description,
     avatarUrl: img.secure_url,
     activeMembers: memberIds,
-    members: memberIds,
+    members: Chat.createMemberships(memberIds),
     admins: [req.user._id],
     createdBy: req.user._id,
     unreadCounts,
@@ -455,6 +448,245 @@ export const updateGroupDetails = asyncHandler(async (req, res) => {
         groupId: group._id.toString(),
       },
       'Group details updated successfully',
+    ),
+  );
+});
+
+// todo add js docs for this controller
+export const deleteChatForCurrentUser = asyncHandler(async (req, res) => {
+  const chatId = req.body?.chatId?.trim();
+  const userId = req.user._id;
+
+  if (!chatId) {
+    throw new ApiError(400, 'Chat id is required');
+  }
+
+  if (!isValidObjectId(chatId)) {
+    throw new ApiError(400, 'Invalid chat id');
+  }
+
+  const chat = await Chat.findOne({ _id: chatId, 'members.user': userId }).select('+members');
+  if (!chat) {
+    throw new ApiError(404, 'Chat not found');
+  }
+
+  const membership =
+    chat.getCurrentActiveMembershipForUser(userId) || chat.getLatestMembershipForUser(userId);
+  if (!membership) {
+    throw new ApiError(403, 'You are not a member of this chat');
+  }
+
+  membership.deletedAt = new Date();
+  chat.unreadCounts.set(userId.toString(), 0);
+  await chat.save({ validateBeforeSave: false });
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        chatId: chat._id.toString(),
+      },
+      'Chat deleted for you successfully',
+    ),
+  );
+});
+
+// todo add js docs for this controller
+export const leaveGroup = asyncHandler(async (req, res) => {
+  const chatId = req.body?.chatId?.trim();
+  const userId = req.user._id;
+  const userIdStr = userId.toString();
+
+  if (!chatId) {
+    throw new ApiError(400, 'Group id is required');
+  }
+
+  const group = await Chat.findOne({
+    _id: chatId,
+    type: ChatType.GROUP,
+    activeMembers: userId,
+  }).select('+members');
+
+  if (!group) {
+    throw new ApiError(404, 'Group not found or you are not an active member');
+  }
+
+  if (group.activeMembers.length <= 1) {
+    throw new ApiError(400, 'Last active member cannot leave the group');
+  }
+
+  const membership = group.getCurrentActiveMembershipForUser(userId);
+  if (!membership) {
+    throw new ApiError(403, 'Active membership not found');
+  }
+
+  const notification = await Message.create({
+    chat: group._id,
+    sender: userId,
+    type: messageType.NOTIFICATION,
+    text: `${capitalizeWords(req.user.name)} left the group`,
+  });
+
+  const populatedMessage = sanitizeMessage(
+    await Message.findById(notification._id).populate('sender', 'name username avatarUrl').lean(),
+  );
+
+  const remainingMemberIds = group.activeMembers
+    .map((memberId) => memberId.toString())
+    .filter((memberId) => memberId !== userIdStr);
+
+  membership.leftAt = new Date();
+  group.activeMembers = remainingMemberIds;
+  group.admins = group.admins.filter((adminId) => adminId.toString() !== userIdStr);
+  if (!group.admins.length && remainingMemberIds.length) {
+    group.admins.push(remainingMemberIds[0]);
+  }
+  group.unreadCounts.set(userIdStr, 0);
+  remainingMemberIds.forEach((memberId) => {
+    group.unreadCounts.set(memberId, (group.unreadCounts?.get(memberId) || 0) + 1);
+  });
+  await group.save();
+
+  const io = req.app.get('io');
+
+  const socketIds = onlineUsers.getSockets(userIdStr);
+  socketIds?.forEach((socketId) => {
+    const socket = io.sockets.sockets.get(socketId);
+    socket?.leave(`chat:${chatId}`);
+  });
+
+  io.to(`chat:${chatId}`).emit(MESSAGE_EVENTS.RECEIVED, populatedMessage);
+
+  remainingMemberIds.forEach((memberId) => {
+    io.to(`user:${memberId}`).emit(CHAT_EVENTS.UPDATED, {
+      id: group._id.toString(),
+      lastMessage: populatedMessage,
+      lastMessageAt: populatedMessage.createdAt,
+      unreadCount: group.unreadCounts?.get(memberId) || 0,
+    });
+  });
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        groupId: group._id.toString(),
+      },
+      'Group left successfully',
+    ),
+  );
+});
+
+// todo add js docs for this controller
+export const addMemberToGroup = asyncHandler(async (req, res) => {
+  const chatId = req.body?.chatId?.trim();
+  const memberId = req.body?.memberId?.trim();
+  const adminId = req.user._id;
+  const adminIdStr = adminId.toString();
+
+  if (!chatId) {
+    throw new ApiError(400, 'Group id is required');
+  }
+
+  if (!memberId) {
+    throw new ApiError(400, 'Member id is required');
+  }
+
+  if (!isValidObjectId(chatId) || !isValidObjectId(memberId)) {
+    throw new ApiError(400, 'Invalid group or member id');
+  }
+
+  if (memberId === adminIdStr) {
+    throw new ApiError(400, 'You are already a member of this group');
+  }
+
+  const memberIsNotFriend = !req.user.friends.some((friendId) => friendId.toString() === memberId);
+  if (memberIsNotFriend) {
+    throw new ApiError(400, 'Member must be your friend');
+  }
+
+  const member = await User.findOne({
+    _id: memberId,
+    isEmailVerified: true,
+  }).select('name username avatarUrl');
+
+  if (!member) {
+    throw new ApiError(404, 'Member not found');
+  }
+
+  const group = await Chat.findOne({
+    _id: chatId,
+    type: ChatType.GROUP,
+    activeMembers: adminId,
+  }).select('+members');
+
+  if (!group) {
+    throw new ApiError(404, 'Group not found');
+  }
+
+  if (!group.admins.some((groupAdminId) => groupAdminId.toString() === adminIdStr)) {
+    throw new ApiError(403, 'Only group admins can add members');
+  }
+
+  if (group.activeMembers.some((activeMemberId) => activeMemberId.toString() === memberId)) {
+    throw new ApiError(400, 'Member is already active member in this group');
+  }
+
+  if (group.activeMembers.length >= 50) {
+    throw new ApiError(400, 'Group already has maximum active members');
+  }
+
+  const joinedAt = new Date();
+  group.members.push({
+    user: memberId,
+    joinedAt,
+    leftAt: null,
+    deletedAt: null,
+  });
+  group.activeMembers.push(memberId);
+  group.unreadCounts.set(memberId, 0);
+
+  const notification = await Message.create({
+    chat: group._id,
+    sender: adminId,
+    type: messageType.NOTIFICATION,
+    text: `${capitalizeWords(req.user.name)} added ${capitalizeWords(member.name)} to the group`,
+  });
+
+  const populatedMessage = sanitizeMessage(
+    await Message.findById(notification._id).populate('sender', 'name username avatarUrl').lean(),
+  );
+
+  group.activeMembers.forEach((memberId) => {
+    const memberIdStr = memberId.toString();
+    if (memberIdStr === adminIdStr) return;
+    group.unreadCounts.set(memberIdStr, (group.unreadCounts?.get(memberIdStr) || 0) + 1);
+  });
+  await group.save();
+
+  const io = req.app.get('io');
+
+  io.to(`chat:${chatId}`).emit(MESSAGE_EVENTS.RECEIVED, populatedMessage);
+
+  group.activeMembers.forEach((memberId) => {
+    io.to(`user:${memberId}`).emit(CHAT_EVENTS.UPDATED, {
+      id: group._id.toString(),
+      lastMessage: populatedMessage,
+      lastMessageAt: populatedMessage.createdAt,
+      unreadCount: group.unreadCounts?.get(member._id.toString()) || 0,
+    });
+  });
+
+  // TODO - do we need to send separate notification to new user also ?
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        groupId: group._id.toString(),
+        memberId: member._id.toString(),
+      },
+      'Member added successfully',
     ),
   );
 });

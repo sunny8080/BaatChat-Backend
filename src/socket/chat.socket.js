@@ -64,7 +64,7 @@ export const registerChatListeners = (io, socket) => {
             name: receiver.name,
             avatarUrl: receiver.avatarUrl,
             activeMembers,
-            members: activeMembers,
+            members: Chat.createMemberships(activeMembers),
             createdBy: senderId,
           });
         }
@@ -85,9 +85,6 @@ export const registerChatListeners = (io, socket) => {
         type: messageType.TEXT,
         text,
       });
-
-      chat.lastMessage = message._id;
-      chat.lastMessageAt = message.createdAt;
 
       // populated message will be used to update active chat
       const populatedMessage = sanitizeMessage(
@@ -374,7 +371,7 @@ export const registerChatListeners = (io, socket) => {
       const chat = await Chat.findOne({
         _id: chatId,
         activeMembers: currentUserId,
-      });
+      }).select('+members');
 
       if (!chat) {
         throw new Error('Unauthorized');
@@ -413,10 +410,12 @@ export const registerChatListeners = (io, socket) => {
         const lastMessages = (
           await Promise.all(
             activeMemberIds.map(async (memberId) => {
-              const lastMessage = await Message.findOne({
+              const visibleMessageQuery = chat.buildVisibleMessageQuery(memberId, {
                 chat: chat._id,
-                deletedBy: { $ne: memberId },
-              })
+              });
+              if (!visibleMessageQuery) return null;
+
+              const lastMessage = await Message.findOne(visibleMessageQuery)
                 .sort({ createdAt: -1, _id: -1 })
                 .populate('sender', 'name username avatarUrl')
                 .lean();

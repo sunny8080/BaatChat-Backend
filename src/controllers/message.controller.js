@@ -210,7 +210,7 @@ const getOrCreateChat = async (chatId, senderId, receiverId, req) => {
         name: receiver.name,
         avatarUrl: receiver.avatarUrl,
         activeMembers,
-        members: activeMembers,
+        members: Chat.createMemberships(activeMembers),
         createdBy: senderId,
       });
     }

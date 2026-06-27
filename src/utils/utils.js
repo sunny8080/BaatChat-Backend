@@ -138,7 +138,7 @@ export const sanitizeUser = (user) => {
  * @returns {object} Chat object with `id` mapped from `_id`, populated members sanitized, and internal fields removed.
  */
 export const sanitizeChat = (chat) => {
-  const { _id, __v, unreadCounts, lastMessage, activeMembers, ...rest } = chat;
+  const { _id, __v, unreadCounts, members, lastMessage, activeMembers, ...rest } = chat;
   const sanitizedChat = {
     ...rest,
     id: _id.toString(),
