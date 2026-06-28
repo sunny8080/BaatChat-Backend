@@ -124,10 +124,6 @@ export const GROUP_EVENTS = {
   DELETED: 'group:deleted',
 
   JOIN: 'group:join',
-  LEAVE: 'group:leave',
-
-  ADD_MEMBER: 'group:add-member',
-  MEMBER_ADDED: 'group:member-added',
 
   REMOVE_MEMBER: 'group:remove-member',
   MEMBER_REMOVED: 'group:member-removed',
