@@ -26,7 +26,6 @@ export const getCurrentUserChats = asyncHandler(async (req, res) => {
 
   let chats = await Chat.find({ 'members.user': userId })
     .select('+members -admins -createdBy -createdAt -updatedAt')
-    .sort({ lastMessageAt: -1, updatedAt: -1 })
     .populate('activeMembers', 'name username avatarUrl')
     .exec();
 
@@ -76,7 +75,13 @@ export const getCurrentUserChats = asyncHandler(async (req, res) => {
         return sanitizeChat(chatData);
       }),
     )
-  ).filter(Boolean);
+  )
+    .filter(Boolean)
+    .sort((a, b) => {
+      const aTime = a.lastMessage?.createdAt ? new Date(a.lastMessage.createdAt).getTime() : 0;
+      const bTime = b.lastMessage?.createdAt ? new Date(b.lastMessage.createdAt).getTime() : 0;
+      return bTime - aTime;
+    });
 
   return res.status(200).json(
     new ApiResponse(
@@ -533,6 +538,9 @@ export const leaveGroup = asyncHandler(async (req, res) => {
     throw new ApiError(403, 'Active membership not found');
   }
 
+  // leave group first then send notification to others
+  membership.leftAt = new Date();
+
   const notification = await Message.create({
     chat: group._id,
     sender: userId,
@@ -548,12 +556,14 @@ export const leaveGroup = asyncHandler(async (req, res) => {
     .map((memberId) => memberId.toString())
     .filter((memberId) => memberId !== userIdStr);
 
-  membership.leftAt = new Date();
   group.activeMembers = remainingMemberIds;
   group.admins = group.admins.filter((adminId) => adminId.toString() !== userIdStr);
+
   if (!group.admins.length && remainingMemberIds.length) {
     group.admins.push(remainingMemberIds[0]);
+    group.createdBy = remainingMemberIds[0];
   }
+
   group.unreadCounts.set(userIdStr, 0);
   remainingMemberIds.forEach((memberId) => {
     group.unreadCounts.set(memberId, (group.unreadCounts?.get(memberId) || 0) + 1);
