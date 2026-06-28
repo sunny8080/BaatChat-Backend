@@ -601,9 +601,9 @@ export const leaveGroup = asyncHandler(async (req, res) => {
 });
 
 // todo add js docs for this controller
-export const addMemberToGroup = asyncHandler(async (req, res) => {
+export const addMembersToGroup = asyncHandler(async (req, res) => {
   const chatId = req.body?.chatId?.trim();
-  const memberId = req.body?.memberId?.trim();
+  let members = req.body?.members;
   const adminId = req.user._id;
   const adminIdStr = adminId.toString();
 
@@ -611,30 +611,41 @@ export const addMemberToGroup = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Group id is required');
   }
 
-  if (!memberId) {
-    throw new ApiError(400, 'Member id is required');
+  if (!members) {
+    throw new ApiError(400, 'Members are required');
   }
 
-  if (!isValidObjectId(chatId) || !isValidObjectId(memberId)) {
+  if (typeof members === 'string') {
+    try {
+      members = JSON.parse(members);
+    } catch {
+      members = members.split(',');
+    }
+  }
+
+  if (!Array.isArray(members)) {
+    throw new ApiError(400, 'Members are required');
+  }
+
+  const memberIds = [
+    ...new Set(members.map((memberId) => memberId?.toString().trim()).filter(Boolean)),
+  ];
+
+  if (!memberIds.length) {
+    throw new ApiError(400, 'Member ids are required');
+  }
+
+  if (!isValidObjectId(chatId) || memberIds.some((memberId) => !isValidObjectId(memberId))) {
     throw new ApiError(400, 'Invalid group or member id');
   }
 
-  if (memberId === adminIdStr) {
+  if (memberIds.includes(adminIdStr)) {
     throw new ApiError(400, 'You are already a member of this group');
   }
 
-  const memberIsNotFriend = !req.user.friends.some((friendId) => friendId.toString() === memberId);
-  if (memberIsNotFriend) {
-    throw new ApiError(400, 'Member must be your friend');
-  }
-
-  const member = await User.findOne({
-    _id: memberId,
-    isEmailVerified: true,
-  }).select('name username avatarUrl');
-
-  if (!member) {
-    throw new ApiError(404, 'Member not found');
+  const friendIds = new Set(req.user.friends.map((friendId) => friendId.toString()));
+  if (memberIds.some((memberId) => !friendIds.has(memberId))) {
+    throw new ApiError(400, 'All members must be your friends');
   }
 
   const group = await Chat.findOne({
@@ -651,29 +662,46 @@ export const addMemberToGroup = asyncHandler(async (req, res) => {
     throw new ApiError(403, 'Only group admins can add members');
   }
 
-  if (group.activeMembers.some((activeMemberId) => activeMemberId.toString() === memberId)) {
-    throw new ApiError(400, 'Member is already active member in this group');
+  const activeMemberIds = new Set(
+    group.activeMembers.map((activeMemberId) => activeMemberId.toString()),
+  );
+  if (memberIds.some((memberId) => activeMemberIds.has(memberId))) {
+    throw new ApiError(400, 'One or more members are already active members in this group');
   }
 
-  if (group.activeMembers.length >= 50) {
+  if (group.activeMembers.length + memberIds.length > 50) {
     throw new ApiError(400, 'Group already has maximum active members');
   }
 
+  const membersToAdd = await User.find({
+    _id: { $in: memberIds },
+    isEmailVerified: true,
+  })
+    .select('name username avatarUrl')
+    .lean();
+
+  if (membersToAdd.length !== memberIds.length) {
+    throw new ApiError(404, 'One or more members not found');
+  }
+
   const joinedAt = new Date();
-  group.members.push({
+  const newMemberships = memberIds.map((memberId) => ({
     user: memberId,
     joinedAt,
     leftAt: null,
     deletedAt: null,
-  });
-  group.activeMembers.push(memberId);
-  group.unreadCounts.set(memberId, 0);
+  }));
+  group.members.push(...newMemberships);
+  group.activeMembers.push(...memberIds);
+  memberIds.forEach((memberId) => group.unreadCounts.set(memberId, 0));
+
+  const memberNames = membersToAdd.map((member) => capitalizeWords(member.name)).join(', ');
 
   const notification = await Message.create({
     chat: group._id,
     sender: adminId,
     type: messageType.NOTIFICATION,
-    text: `${capitalizeWords(req.user.name)} added ${capitalizeWords(member.name)} to the group`,
+    text: `${capitalizeWords(req.user.name)} added ${memberNames} to the group`,
   });
 
   const populatedMessage = sanitizeMessage(
@@ -699,20 +727,23 @@ export const addMemberToGroup = asyncHandler(async (req, res) => {
       avatarUrl: group.avatarUrl,
       lastMessage: populatedMessage,
       lastMessageAt: populatedMessage.createdAt,
-      unreadCount: group.unreadCounts?.get(member._id.toString()) || 0,
+      unreadCount: group.unreadCounts?.get(memberId.toString()) || 0,
     });
   });
 
-  // TODO - do we need to send separate notification to new user also ?
+  membersToAdd.forEach((mem) => {
+    mem.isOnline = onlineUsers.isOnline(mem._id.toString());
+  });
+  const addedMembers = membersToAdd.map((usr) => sanitizeUser(usr));
 
   return res.status(200).json(
     new ApiResponse(
       200,
       {
         groupId: group._id.toString(),
-        memberId: member._id.toString(),
+        addedMembers,
       },
-      'Member added successfully',
+      'Members added successfully',
     ),
   );
 });

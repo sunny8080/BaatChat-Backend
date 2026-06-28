@@ -6,7 +6,7 @@ import {
   updateGroupDetails,
   deleteChatForCurrentUser,
   leaveGroup,
-  addMemberToGroup,
+  addMembersToGroup,
 } from '../controllers/chat.controller.js';
 import { authenticateUser } from '../middlewares/auth.middleware.js';
 import { uploadImage } from '../middlewares/multer.middleware.js';
@@ -19,7 +19,7 @@ router.route('/get-chat-details').post(authenticateUser, userLimiter, getChatDet
 router.route('/create-group').post(authenticateUser, uploadImage.single('avatar'), createGroup);
 router.route('/delete-chat').delete(authenticateUser, deleteChatForCurrentUser);
 router.route('/leave-group').patch(authenticateUser, leaveGroup);
-router.route('/add-member').patch(authenticateUser, addMemberToGroup);
+router.route('/add-members').patch(authenticateUser, addMembersToGroup);
 router
   .route('/update-group-details')
   .patch(authenticateUser, uploadImage.single('avatar'), updateGroupDetails);
