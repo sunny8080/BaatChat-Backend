@@ -39,6 +39,7 @@ export const getCurrentUserChats = asyncHandler(async (req, res) => {
           latestMembership,
           { chat: chat._id },
         );
+
         if (!visibleMessageQuery) return null; // when membership don't have joinedAt
 
         const lastMessage = await Message.findOne(visibleMessageQuery)
@@ -47,8 +48,14 @@ export const getCurrentUserChats = asyncHandler(async (req, res) => {
           .populate('sender', 'name username')
           .lean();
 
-        // when chat is deleted, there will be no last message and latest membership will have deletedAt
-        if (!lastMessage && latestMembership?.deletedAt) return null;
+        // if user has left chat and deleted chat and there is no chat message, then we don't need to show that chat to user
+        if (
+          !lastMessage &&
+          latestMembership?.deletedAt &&
+          (chat.type !== ChatType.GROUP || latestMembership.leftAt)
+        ) {
+          return null;
+        }
 
         const chatData = chat.toObject();
         const userIdStr = userId.toString();
@@ -144,9 +151,15 @@ export const getChatDetails = asyncHandler(async (req, res) => {
   chatData.messages = messages;
   chatData.nextCursor = nextCursor;
 
-  chatData.activeMembers.forEach((mem) => {
-    mem.isOnline = onlineUsers.isOnline(mem._id.toString());
-  });
+  const isCurrentUserActiveMember = chatData.activeMembers.some(
+    (mem) => mem._id.toString() === userId.toString(),
+  );
+
+  if (isCurrentUserActiveMember) {
+    chatData.activeMembers.forEach((mem) => {
+      mem.isOnline = onlineUsers.isOnline(mem._id.toString());
+    });
+  }
 
   if (chatData.type === ChatType.PERSONAL) {
     // update name chat details in case of personal chat
@@ -671,6 +684,9 @@ export const addMemberToGroup = asyncHandler(async (req, res) => {
   group.activeMembers.forEach((memberId) => {
     io.to(`user:${memberId}`).emit(CHAT_EVENTS.UPDATED, {
       id: group._id.toString(),
+      type: group.type,
+      name: group.name,
+      avatarUrl: group.avatarUrl,
       lastMessage: populatedMessage,
       lastMessageAt: populatedMessage.createdAt,
       unreadCount: group.unreadCounts?.get(member._id.toString()) || 0,

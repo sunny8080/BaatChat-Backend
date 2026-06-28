@@ -186,12 +186,16 @@ export const registerChatListeners = (io, socket) => {
   socket.on(CHAT_EVENTS.JOIN, async (payload = {}) => {
     let { chatId } = payload;
     chatId = chatId?.trim();
+    const senderId = socket.user.id;
 
     try {
       if (!chatId) {
         throw new Error('Chat id is missing');
       }
-      socket.join(`chat:${chatId}`);
+      const chat = await Chat.findOne({ _id: chatId, activeMembers: senderId });
+      if (chat) {
+        socket.join(`chat:${chatId}`);
+      }
     } catch (error) {
       console.log(error);
     }
