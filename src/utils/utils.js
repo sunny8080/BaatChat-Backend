@@ -3,7 +3,6 @@ import nodemailer from 'nodemailer';
 import ApiError from './ApiError.js';
 import User from '../models/user.model.js';
 import mongoose from 'mongoose';
-import logger from '../logger/winston.logger.js';
 
 /**
  * Generates a six-digit OTP and a deterministic SHA-256 hash tied to the email
@@ -64,24 +63,16 @@ export const hashTempToken = function (token) {
 export const mailSender = async (toEmail, subject, html, text) => {
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
+    port: process.env.SMTP_PORT,
+    secure: process.env.SMTP_PORT === '465',
     auth: {
       user: process.env.SMTP_EMAIL,
       pass: process.env.SMTP_PASSWORD,
     },
   });
 
-  try {
-    console.log('222222222222222222222222222');
-    console.log(process.env.SMTP_HOST);
-    console.log(process.env.SMTP_EMAIL);
-    console.log(process.env.SMTP_PASSWORD);
-    await transporter.verify();
-    console.log('SMTP server is ready');
-  } catch (error) {
-    console.log('777777777777777777777777777');
-    console.error(error);
-    console.log('888888888888888888888888888');
-  }
+  // await transporter.verify();
+  // console.log('SMTP server is ready');
 
   const mailOptions = {
     from: `"BaatChat" <${process.env.SITE_EMAIL}>`,
@@ -95,9 +86,6 @@ export const mailSender = async (toEmail, subject, html, text) => {
   try {
     const res = await transporter.sendMail(mailOptions);
   } catch (error) {
-    console.log('111111111111111111111111111');
-    logger.error('333333');
-    logger.error(error.message);
     console.log(error);
     throw new ApiError(500, 'Unable to send mail, try again after some time!');
   }
