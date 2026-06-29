@@ -86,6 +86,7 @@ export const mailSender = async (toEmail, subject, html, text) => {
   try {
     const res = await transporter.sendMail(mailOptions);
   } catch (error) {
+    console.log(error);
     throw new ApiError(500, 'Unable to send mail, try again after some time!');
   }
 };
