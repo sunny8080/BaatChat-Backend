@@ -89,7 +89,7 @@ export const mailSender = async (toEmail, subject, html, text) => {
   // console.log('SMTP server is ready');
 
   const mailOptions = {
-    from: `"BaatChat" <${process.env.EMAIL_FROM}>`,
+    from: `BaatChat <${process.env.EMAIL_FROM}>`,
     to: toEmail,
     subject: subject,
     html,
