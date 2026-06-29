@@ -64,12 +64,15 @@ export const mailSender = async (toEmail, subject, html, text) => {
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: process.env.SMTP_PORT,
-    secure: process.env.NODE_ENV !== 'development',
+    secure: process.env.SMTP_PORT === '465',
     auth: {
       user: process.env.SMTP_EMAIL,
       pass: process.env.SMTP_PASSWORD,
     },
   });
+
+  // await transporter.verify();
+  // console.log('SMTP server is ready');
 
   const mailOptions = {
     from: `"BaatChat" <${process.env.SITE_EMAIL}>`,
@@ -81,7 +84,7 @@ export const mailSender = async (toEmail, subject, html, text) => {
 
   // Send email
   try {
-    await transporter.sendMail(mailOptions);
+    const res = await transporter.sendMail(mailOptions);
   } catch (error) {
     throw new ApiError(500, 'Unable to send mail, try again after some time!');
   }

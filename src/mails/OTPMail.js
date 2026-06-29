@@ -24,14 +24,6 @@ const OTPMail = (name, otp, expiresInMinutes = 10) => {
     body: {
       name: name,
       intro: ['Welcome to <strong>BaatChat</strong> — Bolo. Suno. Connect karo. 🇮🇳', 'Use the OTP below to verify your account. This code is valid for <strong>' + expiresInMinutes + ' minutes</strong> only.'],
-      action: {
-        instructions: 'Enter this One-Time Password (OTP) on the verification screen:',
-        button: {
-          color: '#7C3AED', // BaatChat violet
-          text: otp,
-          link: `https://baatchat.online/auth/verify?otp=${otp}`, // deep link fallback
-        },
-      },
       table: {
         data: [
           {

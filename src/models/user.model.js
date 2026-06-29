@@ -46,7 +46,6 @@ const userSchema = new Schema(
     googleId: {
       type: String,
       trim: true,
-      unique: true,
       required() {
         return this.loginType === UserLoginTypes.GOOGLE;
       },
@@ -118,6 +117,17 @@ const userSchema = new Schema(
     ],
   },
   { timestamps: true },
+);
+
+// add partial indexing on googleId, as googleId should be unique only when it exist
+userSchema.index(
+  { googleId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      googleId: { $exists: true, $type: 'string' },
+    },
+  },
 );
 
 // User middlewares to update password
