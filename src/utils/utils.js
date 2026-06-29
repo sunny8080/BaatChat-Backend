@@ -3,6 +3,7 @@ import nodemailer from 'nodemailer';
 import ApiError from './ApiError.js';
 import User from '../models/user.model.js';
 import mongoose from 'mongoose';
+import { MailtrapTransport } from 'mailtrap';
 
 /**
  * Generates a six-digit OTP and a deterministic SHA-256 hash tied to the email
@@ -61,32 +62,45 @@ export const hashTempToken = function (token) {
  * @throws {ApiError} When the email cannot be sent.
  */
 export const mailSender = async (toEmail, subject, html, text) => {
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
-    secure: process.env.SMTP_PORT === '465',
-    auth: {
-      user: process.env.SMTP_EMAIL,
-      pass: process.env.SMTP_PASSWORD,
-    },
-  });
+  let isDev = process.env.NODE_ENV === 'development';
+  let transporter = undefined;
+
+  if (isDev) {
+    // use mailtrap SMTP for testing
+    transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT),
+      secure: process.env.SMTP_PORT === '465',
+      auth: {
+        user: process.env.SMTP_EMAIL,
+        pass: process.env.SMTP_PASSWORD,
+      },
+    });
+  } else {
+    // use mailtrap api to send mails to real users
+    transporter = nodemailer.createTransport(
+      MailtrapTransport({
+        token: process.env.MAILTRAP_TOKEN,
+      }),
+    );
+  }
 
   // await transporter.verify();
   // console.log('SMTP server is ready');
 
   const mailOptions = {
-    from: `"BaatChat" <${process.env.SITE_EMAIL}>`,
+    from: `"BaatChat" <${process.env.EMAIL_FROM}>`,
     to: toEmail,
     subject: subject,
     html,
     text,
+    replyTo: process.env.SITE_EMAIL,
   };
 
   // Send email
   try {
     const res = await transporter.sendMail(mailOptions);
   } catch (error) {
-    console.log(error);
     throw new ApiError(500, 'Unable to send mail, try again after some time!');
   }
 };
