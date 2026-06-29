@@ -63,8 +63,8 @@ export const hashTempToken = function (token) {
 export const mailSender = async (toEmail, subject, html, text) => {
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
-    secure: process.env.SMTP_PORT === '465',
+    port: 587,
+    secure: false,
     auth: {
       user: process.env.SMTP_EMAIL,
       pass: process.env.SMTP_PASSWORD,
