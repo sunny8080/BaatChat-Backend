@@ -71,9 +71,16 @@ export const mailSender = async (toEmail, subject, html, text) => {
       pass: process.env.SMTP_PASSWORD,
     },
   });
-  console.log('222222222222222222222222222');
-  await transporter.verify();
-  console.log('SMTP server is ready');
+
+  try {
+    console.log('222222222222222222222222222');
+    await transporter.verify();
+    console.log('SMTP server is ready');
+  } catch (error) {
+    console.log('777777777777777777777777777');
+    console.error(error);
+    console.log('888888888888888888888888888');
+  }
 
   const mailOptions = {
     from: `"BaatChat" <${process.env.SITE_EMAIL}>`,
