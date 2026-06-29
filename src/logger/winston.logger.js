@@ -4,7 +4,7 @@ import winston from 'winston';
  * set the current severity based on the current NODE_ENV
  * show all the log levels if the server is running in development mode
  * o/w it it's running on production, show only warn and error
-*/
+ */
 const level = process.env.NODE_ENV === 'development' ? 'debug' : 'warn';
 
 /**
@@ -18,7 +18,7 @@ const levels = {
   debug: 4,
 };
 
-// TODO - check different logger format in Private FED 
+// TODO - check different logger format in Private FED
 /**
  * Customize log format -
  * logs should follow preferred time format
@@ -28,31 +28,37 @@ const levels = {
 const format = winston.format.combine(
   winston.format.timestamp({ format: 'DD MM, YYYY - HH:mm:ss:ms' }),
   winston.format.colorize({ all: true }),
-  winston.format.printf((info) => `[${info.timestamp}] ${info.level}: ${info.message}`)
+  winston.format.printf((info) => `[${info.timestamp}] ${info.level}: ${info.message}`),
 );
 
 /**
  * Define which transports the logger must use to print out messages
  * also allow console print messages
  */
-const transports = [
-  new winston.transports.Console(),
-  new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-  new winston.transports.File({ filename: 'logs/info.log', level: 'info' }),
-  new winston.transports.File({ filename: 'logs/http.log', level: 'http' }),
-];
+const transports = [new winston.transports.Console()];
 
+const isProduction = process.env.NODE_ENV === 'production';
+const isVercel = !!process.env.VERCEL;
 
+// vercel is serverless and it's file system is ready only, so we can't create or write in logs
+// we can only see logs in vercel deployment logs
+if (!isVercel && !isProduction) {
+  transports.push(
+    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
+    new winston.transports.File({ filename: 'logs/info.log', level: 'info' }),
+    new winston.transports.File({ filename: 'logs/http.log', level: 'http' }),
+  );
+}
 
 /**
- * Define different colors for each severity level 
+ * Define different colors for each severity level
  */
 const colors = {
-  error: "red",
-  warn: "yellow",
-  info: "blue",
-  http: "magenta",
-  debug: "white",
+  error: 'red',
+  warn: 'yellow',
+  info: 'blue',
+  http: 'magenta',
+  debug: 'white',
 };
 
 // link the colors with to the severity levels.
@@ -68,7 +74,7 @@ const logger = winston.createLogger({
   level,
   levels,
   format,
-  transports
+  transports,
 });
 
 export default logger;
