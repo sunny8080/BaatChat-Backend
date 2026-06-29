@@ -64,8 +64,6 @@ export const hashTempToken = function (token) {
 export const mailSender = async (toEmail, subject, html, text) => {
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
-    port: 587,
-    secure: false,
     auth: {
       user: process.env.SMTP_EMAIL,
       pass: process.env.SMTP_PASSWORD,
@@ -74,6 +72,9 @@ export const mailSender = async (toEmail, subject, html, text) => {
 
   try {
     console.log('222222222222222222222222222');
+    console.log(process.env.SMTP_HOST);
+    console.log(process.env.SMTP_EMAIL);
+    console.log(process.env.SMTP_PASSWORD);
     await transporter.verify();
     console.log('SMTP server is ready');
   } catch (error) {
